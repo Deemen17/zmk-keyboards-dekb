@@ -1,0 +1,85 @@
+/*
+ * Copyright (c) 2026 DEKB 
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "../common.keymap"
+
+#include <dt-bindings/zmk/rgb.h>
+
+#define UGTOG rgb_ug RGB_TOG
+#define UGBRD rgb_ug RGB_BRD
+#define UGBRI rgb_ug RGB_BRI
+#define UGHUD rgb_ug RGB_HUD
+#define UGHUI rgb_ug RGB_HUI
+#define UGSAI rgb_ug RGB_SAI
+#define UGSAD rgb_ug RGB_SAD
+#define UGSPI rgb_ug RGB_SPI
+#define UGSPD rgb_ug RGB_SPD
+#define UGEFF rgb_ug RGB_EFF
+#define UGEFR rgb_ug RGB_EFR
+
+#define VOLUP kp C_VOL_UP
+#define VOLDN kp C_VOL_DN
+
+#define UF_RESET bootloader_reset 0 0
+
+#define USB Device_USB
+
+#define BT1 device_bt1 0 0
+#define BT2 device_bt2 0 1
+#define BT3 device_bt3 0 2
+
+#define SOOFF soft_off_full 0 0
+
+/ {
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        base {
+            label = "Layer 0";
+            bindings = <
+&gresc    &kp N1   &kp N2  &kp N3  &kp N4  &kp N5  &kp N6  &kp N7  &kp N8  &kp N9    &kp N0   &kp MINUS &kp EQUAL &kp BSLH  &kp DEL 
+&kp TAB   &kp Q    &kp W   &kp E   &kp R   &kp T   &kp Y   &kp U   &kp I   &kp O     &kp P    &kp LBKT  &kp RBKT  &kp BSPC  
+&kp CAPS  &kp A    &kp S   &kp D   &kp F   &kp G   &kp H   &kp J   &kp K   &kp L     &kp SEMI &kp SQT             &kp ENTER 
+&kp LSHFT &kp NUBS &kp Z   &kp X   &kp C   &kp V   &kp B   &kp N   &kp M   &kp COMMA &kp DOT  &kp FSLH  &kp UP    &mo 3
+&kp LCTRL &kp LGUI &kp LALT                        &kp SPACE               &kp RALT  &mo 1    &kp LEFT  &kp DOWN  &kp RIGHT
+            >;
+        };
+
+        layer_1 {
+            label = "Layer 1";
+            bindings = < 
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans                         &trans                  &trans  &trans  &trans  &trans  &trans
+            >;
+        };
+
+        layer_2 {
+            label = "Layer 2";
+            bindings = <
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans                         &trans                  &trans  &trans  &trans  &trans  &trans
+            >;
+        };
+
+        layer_3 {
+            label = "Layer 3";
+            bindings = < 
+&kp GRAVE &kp F1   &kp F2  &kp F3  &kp F4  &kp F5  &kp F6  &kp F7  &kp F8  &kp F9  &kp F10  &kp F11 &kp F12 &kp F13 &DE_BOOT
+&DE_USB   &DE_BT1  &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans   &trans  &UGSPD  &UGSPI  
+&trans    &trans   &de_sleep &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGHUD   &UGHUI          &UGTOG     
+&trans    &trans   &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSAD  &UGSAI   &trans  &UGBRI  &trans
+&trans    &trans   &trans                          &trans                  &trans  &trans   &UGEFF  &UGBRD  &UGEFR
+            >;
+        };
+    };
+
+};

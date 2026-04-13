@@ -1,0 +1,15 @@
+identifier: de60_hs_minila
+name: DE60 HS MINILA
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - adc
+  - usb_device
+  - ble
+  - ieee802154
+  - pwm
+  - watchdog
+snippet: studio-rpc-usb-uart

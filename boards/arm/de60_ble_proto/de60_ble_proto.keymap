@@ -1,0 +1,68 @@
+#include "../common.keymap"
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            label = "Layer 0";
+            bindings = <
+&gresc    &kp N1   &kp N2  &kp N3  &kp N4  &kp N5  &kp N6  &kp N7  &kp N8  &kp N9    &kp N0   &kp MINUS &kp EQUAL &kp BSLH  &kp DEL 
+&kp TAB   &kp Q    &kp W   &kp E   &kp R   &kp T   &kp Y   &kp U   &kp I   &kp O     &kp P    &kp LBKT  &kp RBKT  &kp BSPC  
+&kp CLCK  &kp A    &kp S   &kp D   &kp F   &kp G   &kp H   &kp J   &kp K   &kp L     &kp SEMI &kp SQT             &kp ENTER 
+&kp LSHFT          &kp Z   &kp X   &kp C   &kp V   &kp B   &kp N   &kp M   &kp COMMA &kp DOT  &kp FSLH  &kp UP    &mo 3
+&kp LCTRL &kp LGUI &kp LALT                        &kp SPACE                                  &kp LEFT  &kp DOWN  &kp RIGHT
+            >;
+        };
+
+        layer_1 {
+            label = "Layer 1";
+            bindings = < 
+&trans  &kp F1   &kp F2  &kp F3 &kp F4  &kp F5  &kp F6  &kp F7  &kp F8  &kp F9  &kp F10 &kp F11 &kp F12 &trans  &trans
+&trans  &trans   &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans   &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans           &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans   &trans                         &trans                                  &trans  &trans  &trans
+            >;
+        };
+        
+        layer_2 {
+            label = "Layer 2";
+            bindings = < 
+&trans  &trans   &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans   &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans   &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
+&trans           &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans   &trans                         &trans                                  &trans  &trans  &trans
+            >;
+        };
+
+        layer_3 {
+            label = "Layer 3";
+            bindings = <
+&de_out   &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans &DE_BOOT
+&DE_USB   &DE_BT1 &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSPD  &UGSPI  &UGEFF
+&de_batt  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGHUI  &UGSAD  &UGSAI          &UGTOG       
+&de_sleep         &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGBRD  &UGBRI  &trans  &trans  &trans 
+&trans    &trans  &trans                          &trans                                  &trans  &trans  &trans  
+            >;
+        };
+
+        layer_4 { status = "reserved"; };
+        layer_5 { status = "reserved"; };
+    };
+};
+
+// ---------- DE60 PROTO RED key switch positions ----------
+//
+// -------------------------------------------------------------------------------------------
+// |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  | 11  | 12  | 13  | 14  | 
+// -------------------------------------------------------------------------------------------
+// |   15   | 16  | 17  | 18  | 19  | 20  | 21  |  22 |  23 |  24 |  25 |  26 |  27 |   28   | 
+// -------------------------------------------------------------------------------------------
+// |    29    | 30  | 31  | 32  | 33  | 34  | 35  |  36 |  37 |  38 |  39 |  40 |     41     |  
+// -------------------------------------------------------------------------------------------
+// |     42     |  43 | 44  | 45  | 46  | 47  |  48 |  49 |  50 |  51 |  52 |    53    |  54 |
+// -------------------------------------------------------------------------------------------
+// |   55   |  56  |   57   |                   58                  |   59   |  60  |   61   |  
+// -------------------------------------------------------------------------------------------

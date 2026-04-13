@@ -1,0 +1,54 @@
+#include "../common.keymap"
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            label = "Layer 0";
+            bindings = <
+&gresc    &kp N1   &kp N2   &kp N3   &kp N4   &kp N5   &kp N6   &kp N7   &kp N8   &kp N9    &kp N0   &kp MINUS &kp EQUAL &kp BSPC  &kp BSPC   &kp PSCRN
+&kp TAB   &kp Q    &kp W    &kp E    &kp R    &kp T    &kp Y    &kp U    &kp I    &kp O     &kp P    &kp LBKT  &kp RBKT  &kp BSLH  &kp PG_UP
+&kp CLCK  &kp A    &kp S    &kp D    &kp F    &kp G    &kp H    &kp J    &kp K    &kp L     &kp SEMI &kp SQT             &kp ENTER &kp PG_DN
+&kp LSHFT &kp NUBS &kp Z    &kp X    &kp C    &kp V    &kp B    &kp N    &kp M    &kp COMMA &kp DOT  &kp FSLH  &kp RSHFT &kp UP    &de_batt
+&kp LCTRL &kp LGUI &kp LALT                               &kp SPACE                                  &mo 3     &kp LEFT  &kp DOWN  &kp RIGHT
+            >;
+        };
+
+        layer_1 {
+            label = "Layer 1";
+            bindings = <
+&trans &kp F1 &kp F2 &kp F3 &kp F4 &kp F5 &kp F6 &kp F7 &kp F8 &kp F9 &kp F10 &kp F11 &kp F12 &trans  &trans  &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans  &trans  &trans  &trans  &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans  &trans          &trans  &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans  &trans  &trans  &trans  &trans
+&trans &trans &trans                                &trans                    &trans  &trans  &trans  &trans
+            >;
+        };
+
+        layer_2 {
+            label = "Layer 2";
+            bindings = <
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans        &trans &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
+&trans &trans &trans                                &trans                   &trans &trans &trans &trans
+            >;
+        };
+
+        layer_3 {
+            label = "Layer 3";
+            bindings = <
+&de_out   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &DE_BOOT
+&DE_USB   &DE_BT1  &DE_BT2  &DE_BT3  &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans
+&de_batt  &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans            &trans   &trans
+&de_sleep &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans   &trans
+&trans    &trans   &trans                                   &trans                                  &trans   &trans   &trans   &trans
+            >;
+        };
+
+        layer_4 { status = "reserved"; };
+        layer_5 { status = "reserved"; };
+    };
+};

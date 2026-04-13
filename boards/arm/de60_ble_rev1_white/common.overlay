@@ -1,0 +1,178 @@
+/ {
+
+    matrix_transform_all: matrix_transform_all {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) RC(0,5) RC(1,5) RC(0,6) RC(1,6) RC(5,6)
+            RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(3,6)
+            RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(4,6)
+            RC(6,0) RC(7,0) RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5) RC(6,6) RC(7,6)
+            RC(8,0) RC(9,0) RC(8,1)                         RC(9,3)                 RC(8,4) RC(9,5) RC(8,5) RC(9,6) RC(8,6)
+        >;
+    };
+
+};
+
+// Multi Layouts Defines
+//                                           w   h    x    y     rot    rx    ry
+#define ROW0_FIXED    <&key_physical_attrs 100 100    0    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  100    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  200    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  300    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  400    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  500    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  600    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  700    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  800    0       0     0     0> \
+                    , <&key_physical_attrs 100 100  900    0       0     0     0> \
+                    , <&key_physical_attrs 100 100 1000    0       0     0     0> \
+                    , <&key_physical_attrs 100 100 1100    0       0     0     0> \
+                    , <&key_physical_attrs 100 100 1200    0       0     0     0>
+
+#define ROW0_BS_2U    <&key_physical_attrs 200 100 1300    0       0     0     0>
+
+#define ROW0_BS_1U    <&key_physical_attrs 100 100 1300    0       0     0     0> \
+                    , <&key_physical_attrs 100 100 1400    0       0     0     0>
+
+#define ROW1_FIXED    <&key_physical_attrs 150 100    0  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  150  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  250  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  350  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  450  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  550  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  650  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  750  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  850  100       0     0     0> \
+                    , <&key_physical_attrs 100 100  950  100       0     0     0> \
+                    , <&key_physical_attrs 100 100 1050  100       0     0     0> \
+                    , <&key_physical_attrs 100 100 1150  100       0     0     0> \
+                    , <&key_physical_attrs 100 100 1250  100       0     0     0>
+
+#define ROW1_ANSI     <&key_physical_attrs 150 100 1350  100       0     0     0>
+
+#define ROW1_ISO      <&key_physical_attrs 125 200 1375  100       0     0     0>
+
+
+#define ROW2_FIXED    <&key_physical_attrs 175 100    0  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  175  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  275  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  375  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  475  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  575  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  675  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  775  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  875  200       0     0     0> \
+                    , <&key_physical_attrs 100 100  975  200       0     0     0> \
+                    , <&key_physical_attrs 100 100 1075  200       0     0     0> \
+                    , <&key_physical_attrs 100 100 1175  200       0     0     0>
+
+#define ROW2_ANSI     <&key_physical_attrs 225 100 1275  200       0     0     0>
+
+#define ROW2_ISO      <&key_physical_attrs 100 100 1275  200       0     0     0>
+
+#define ROW3_ANSI     <&key_physical_attrs 225 100    0  300       0     0     0>
+
+#define ROW3_ISO      <&key_physical_attrs 125 100    0  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  125  300       0     0     0>
+
+#define ROW3_FIXED    <&key_physical_attrs 100 100  225  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  325  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  425  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  525  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  625  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  725  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  825  300       0     0     0> \
+                    , <&key_physical_attrs 100 100  925  300       0     0     0> \
+                    , <&key_physical_attrs 100 100 1025  300       0     0     0>
+
+#define ROW3_RS_275U  <&key_physical_attrs 100 100 1125  300       0     0     0> \
+                    , <&key_physical_attrs 275 100 1225  300       0     0     0>
+
+#define ROW3_RS_175U  <&key_physical_attrs 100 100 1125  300       0     0     0> \
+                    , <&key_physical_attrs 175 100 1225  300       0     0     0> \
+                    , <&key_physical_attrs 100 100 1400  300       0     0     0>
+
+#define ROW3_RS_ARROW <&key_physical_attrs 175 100 1125  300       0     0     0> \
+                    , <&key_physical_attrs 100 100 1300  300       0     0     0> \
+                    , <&key_physical_attrs 100 100 1400  300       0     0     0>
+
+
+#define SPC_625U_ARROW <&key_physical_attrs 125 100    0  400       0     0     0> \
+                    , <&key_physical_attrs 125 100  125  400       0     0     0> \
+                    , <&key_physical_attrs 125 100  250  400       0     0     0> \
+                    , <&key_physical_attrs 625 100  375  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1000  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1100  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1200  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1300  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1400  400       0     0     0>
+
+#define SPC_625U_UNI  <&key_physical_attrs 125 100    0  400       0     0     0> \
+                    , <&key_physical_attrs 125 100  125  400       0     0     0> \
+                    , <&key_physical_attrs 125 100  250  400       0     0     0> \
+                    , <&key_physical_attrs 625 100  375  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1000  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1125  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1250  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1375  400       0     0     0>
+
+#define SPC_625U_HHKB <&key_physical_attrs 100 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 125 100  250  400       0     0     0> \
+                    , <&key_physical_attrs 625 100  375  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1000  400       0     0     0> \
+                    , <&key_physical_attrs 125 100 1125  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1250  400       0     0     0>
+
+#define SPC_7U        <&key_physical_attrs 150 100    0  400       0     0     0> \
+                    , <&key_physical_attrs 100 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 150 100  250  400       0     0     0> \
+                    , <&key_physical_attrs 700 100  400  400       0     0     0> \
+                    , <&key_physical_attrs 150 100 1100  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1250  400       0     0     0> \
+                    , <&key_physical_attrs 150 100 1350  400       0     0     0>
+
+#define SPC_7U_ARROW  <&key_physical_attrs 150 100    0  400       0     0     0> \
+                    , <&key_physical_attrs 150 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 150 100  300  400       0     0     0> \
+                    , <&key_physical_attrs 700 100  400  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1100  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1200  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1300  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1400  400       0     0     0>
+
+#define SPC_7U_HHKB   <&key_physical_attrs 150 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 150 100  300  400       0     0     0> \
+                    , <&key_physical_attrs 700 100  450  400       0     0     0> \
+                    , <&key_physical_attrs 150 100 1150  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1300  400       0     0     0>
+
+#define SPC_10U       <&key_physical_attrs 150 100    0  400       0     0     0> \
+                    , <&key_physical_attrs 100 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 1000 100 250  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1250  400       0     0     0> \
+                    , <&key_physical_attrs 150 100 1350  400       0     0     0>
+
+#define SPC_10U_HHKB  <&key_physical_attrs 100 100  150  400       0     0     0> \
+                    , <&key_physical_attrs 1000 100 250  400       0     0     0> \
+                    , <&key_physical_attrs 100 100 1250  400       0     0     0>
+
+// Base Layout with all keys in matrix.
+/ {
+    chosen {
+        zmk,physical-layout = &layout_all;
+    };
+
+    layout_all: layout_all {
+        compatible = "zmk,physical-layout";
+        display-name = "ALL_KEYS";
+        transform = <&matrix_transform_all>;
+
+        keys =    ROW0_FIXED , ROW0_BS_1U
+                , ROW1_FIXED , ROW1_ANSI
+                , ROW2_FIXED , ROW2_ANSI
+                , ROW3_ANSI  , ROW3_FIXED , ROW3_RS_ARROW
+                , SPC_625U_ARROW;
+    };
+};

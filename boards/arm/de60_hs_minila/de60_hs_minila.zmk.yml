@@ -1,0 +1,13 @@
+file_format: "1"
+id: de60_hs_minila
+name: DE60 HS MINILA
+type: board
+arch: arm
+features:
+  - keys
+  - underglow
+  - studio
+outputs:
+  - usb
+  - ble
+url: https://www.facebook.com/deemen17

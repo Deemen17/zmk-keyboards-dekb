@@ -1,0 +1,19 @@
+identifier: de_nrf52840
+name: DE nRF52840 Keyboard
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - gpio
+  - i2c
+  - counter
+  - spi
+  - usb_device
+  - nvs
+  - can
+  - kscan
+  - ble
+  - pwm

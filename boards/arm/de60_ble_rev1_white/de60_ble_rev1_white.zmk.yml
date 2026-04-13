@@ -1,0 +1,13 @@
+file_format: "1"
+id: de60_ble_rev1_white
+name: DE60 BLE Rev1
+type: board
+arch: arm
+features:
+  - keys
+  - underglow
+  - studio
+outputs:
+  - usb
+  - ble
+url: https://github.com/Deemen17/

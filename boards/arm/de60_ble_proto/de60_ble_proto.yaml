@@ -1,0 +1,18 @@
+identifier: de60_ble_proto
+name: DE60 BLE Proto PCB
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - gpio
+  - counter
+  - spi
+  - usb_device
+  - nvs
+  - kscan
+  - ble
+snippet: studio-rpc-usb-uart
+file_format: "1"
