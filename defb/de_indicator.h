@@ -30,20 +30,24 @@ typedef enum {
     DE_INDICATOR_STATE_IDLE,
     DE_INDICATOR_STATE_SLEEP,
 
-    DE_INDICATOR_STATE_BATTERY_CHECK,
     DE_INDICATOR_STATE_OUTPUT_CHECK,
+    DE_INDICATOR_STATE_OUTPUT_USB,
+    DE_INDICATOR_STATE_BATTERY_CHECK,
+    
+    DE_INDICATOR_STATE_BOOT,
     DE_INDICATOR_STATE_BLE_SWITCH_EVENT,
     DE_INDICATOR_STATE_LAYER_EVENT,
-    DE_INDICATOR_STATE_BOOT,
 
     DE_INDICATOR_STATE_BLE_PAIRING,
     DE_INDICATOR_STATE_BLE_CONNECTING,
     DE_INDICATOR_STATE_BLE_CONNECTED,
-
+    
+    DE_INDICATOR_STATE_CAPSLOCK,
+    
+    DE_INDICATOR_STATE_BATTERY_DEADLY,
     DE_INDICATOR_STATE_BATTERY_LOW,
     DE_INDICATOR_STATE_BATTERY_CRITICAL,
 
-    DE_INDICATOR_STATE_CAPSLOCK,
 } de_indicator_state_t;
 
 // =====================
@@ -66,8 +70,8 @@ void de_indicator_trigger_ble_profile_status(void);
 void de_indicator_trigger_layer_event(uint8_t layer);
 
 // BLE state updates
-void de_indicator_ble_pairing(bool active);
-void de_indicator_ble_connecting(bool active);
+void de_indicator_ble_pairing(void);
+void de_indicator_ble_connecting(void);
 void de_indicator_ble_connected(void);
 
 // System state updates

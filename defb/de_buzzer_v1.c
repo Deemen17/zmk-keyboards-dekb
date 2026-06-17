@@ -46,6 +46,10 @@ typedef struct {
 
 // Pre-computed note frequencies for better performance
 enum musical_notes {
+    NOTE_C4  = 3822260, // ~261.63Hz - Trầm ấm hơn
+    NOTE_E4  = 3033788, // ~329.63Hz
+    NOTE_G4  = 2551020, // ~392.00Hz
+
     NOTE_C5 = 1908396, // 523.25Hz
     NOTE_D5 = 1700680, // 587.33Hz
     NOTE_E5 = 1515152, // 659.25Hz
@@ -386,33 +390,13 @@ static inline void play_ble_connected_sound(void) {
 // Optimized event listeners
 static int buzzer_listener(const zmk_event_t *eh) {
     const struct zmk_ble_active_profile_changed *profile_ev = as_zmk_ble_active_profile_changed(eh);
-    if (!profile_ev) {
-        return ZMK_EV_EVENT_BUBBLE;
+    if (profile_ev) {
+        play_profile_sound(profile_ev->index);
+        if (zmk_ble_active_profile_is_connected()) {
+            play_ble_connected_sound();
+        }
     }
-
-    BUZZER_LOG_INF("buzzer_listener profile %d", profile_ev->index);
-
-    switch (profile_ev->index) {
-        case 0:
-            play_profile_sound(0);
-            break;
-        case 1:
-            play_profile_sound(1);
-            break;
-        case 2:
-            play_profile_sound(2);
-            break;
-        case 3:
-            play_profile_sound(3);
-            break;
-        case 4:
-            play_profile_sound(4);
-            break;
-        default:
-            break;
-    }
-
-    return ZMK_EV_EVENT_HANDLED;
+    return ZMK_EV_EVENT_BUBBLE;
 }
 
 static int endpoint_listener(const zmk_event_t *eh) {

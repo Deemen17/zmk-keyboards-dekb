@@ -1,4 +1,4 @@
-#include "de_indicator_v2.h"
+#include "de_indicator.h"
 
 #include <string.h>
 
@@ -51,15 +51,12 @@ static const uint8_t led_idx[] = {
     DT_NODE_CHILD_IDX(DT_ALIAS(indicator_b)),
 };
 
-static const struct gpio_dt_spec led_gpio[] = {
-    GPIO_DT_SPEC_GET(DT_ALIAS(indicator_r), gpios),
-    GPIO_DT_SPEC_GET(DT_ALIAS(indicator_g), gpios),
-    GPIO_DT_SPEC_GET(DT_ALIAS(indicator_b), gpios),
-};
-
 // =====================
 // CONFIG
 // =====================
+#ifndef DE_INDICATOR_PRE_SLEEP_MS 
+#define DE_INDICATOR_PRE_SLEEP_MS 200
+#endif 
 
 #ifndef DE_INDICATOR_BLINK_FAST_MS
 #define DE_INDICATOR_BLINK_FAST_MS 120
@@ -101,12 +98,12 @@ static const struct gpio_dt_spec led_gpio[] = {
 #define DE_INDICATOR_BOOT_MS 840
 #endif
 
-#ifndef DE_INDICATOR_BATTERY_LOW_INTERVAL_MS
-#define DE_INDICATOR_BATTERY_LOW_INTERVAL_MS 60000
+#ifndef DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS
+#define DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS 15000
 #endif
 
-#ifndef DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS
-#define DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS 30000
+#ifndef DE_INDICATOR_BATTERY_LOW_INTERVAL_MS
+#define DE_INDICATOR_BATTERY_LOW_INTERVAL_MS 30000
 #endif
 
 #ifndef DE_INDICATOR_STATE_MIN_HOLD_MS
@@ -137,24 +134,28 @@ static const struct gpio_dt_spec led_gpio[] = {
 #define DE_INDICATOR_UPDATE_INTERVAL_MS 20
 #endif
 
-#ifndef SHOW_LED_BATTERY_KEYCODE
-#define SHOW_LED_BATTERY_KEYCODE 0xAB
-#endif
+// =====================
+// DE CUSTOM KEYCODES
+// =====================
 
 #ifndef SHUTDOWN_LED_SLEEP_KEYCODE
-#define SHUTDOWN_LED_SLEEP_KEYCODE 0xAC
+#define SHUTDOWN_LED_SLEEP_KEYCODE 0xDE01
+#endif
+
+#ifndef SHOW_LED_BATTERY_KEYCODE
+#define SHOW_LED_BATTERY_KEYCODE 0xDE02
 #endif
 
 #ifndef SHOW_LED_OUTPUT_KEYCODE
-#define SHOW_LED_OUTPUT_KEYCODE 0xAD
+#define SHOW_LED_OUTPUT_KEYCODE 0xDE03
+#endif
+
+#ifndef SHOW_LED_OUTPUT_USB_KEYCODE
+#define SHOW_LED_OUTPUT_USB_KEYCODE 0xDE04
 #endif
 
 #ifndef SHOW_LED_BLE_PROFILE_STATUS_KEYCODE
-#define SHOW_LED_BLE_PROFILE_STATUS_KEYCODE 0xAE
-#endif
-
-#ifndef STOP_LED_BLE_PROFILE_STATUS_KEYCODE
-#define STOP_LED_BLE_PROFILE_STATUS_KEYCODE 0xAF
+#define SHOW_LED_BLE_PROFILE_STATUS_KEYCODE 0xDE05
 #endif
 
 // =====================
@@ -162,43 +163,50 @@ static const struct gpio_dt_spec led_gpio[] = {
 // =====================
 
 typedef struct {
-    bool battery_check;
-    bool output_check;
-    bool ble_switch;
-    bool layer_event;
+    bool is_sleeping;
+    bool is_booting;
 
-    bool ble_pairing;
-    bool ble_connecting;
-    bool ble_connected;
-    bool boot;
-
-    bool sleep;
+    bool evt_battery_check;
+    bool evt_output_check;
+    bool evt_output_usb;
+    bool evt_layer;
+    bool evt_ble_switch;
+    
+    bool ble_is_pairing;
+    bool ble_is_connecting;
+    bool ble_is_connected;
 } indicator_flags_t;
 
 typedef struct {
-    int64_t battery_check_start;
-    int64_t output_check_start;
-    int64_t ble_switch_start;
-    int64_t layer_start;
-    int64_t ble_connected_start;
-
-    int64_t battery_warn_last;
     int64_t state_enter_time;
+    int64_t boot_start_ts;
+    int64_t last_activity_time;
 
-    int64_t endpoint_event_last;
-    int64_t ble_event_last;
-    int64_t layer_event_last;
-    int64_t boot_start;
-    int64_t ble_pairing_start;
-    int64_t ble_connecting_start;
+    int64_t endpoint_event_last_ts;
+    int64_t output_check_start_ts;
+    int64_t output_usb_start_ts;
+    int64_t battery_check_start_ts;
+    int64_t battery_warn_last_ts;
+    int64_t layer_start_ts;
+    int64_t layer_event_last_ts;
+    
+    int64_t ble_switch_start_ts;
+    int64_t ble_connected_start_ts;
+    int64_t ble_pairing_start_ts;
+    int64_t ble_connecting_start_ts;
+    int64_t ble_last_activity_ts;
+    
+    int64_t capslock_last_update_ts;
 } indicator_timers_t;
 
 typedef struct {
-    uint8_t battery_level;
-    bool capslock;
-    uint8_t layer;
-    bool output_is_usb;
+    uint8_t battery_percent;
+    uint8_t active_layer;
     uint8_t ble_profile_index;
+
+    bool capslock_on;
+    
+    bool is_usb_output;
     bool ble_profile_connected;
     bool ble_profile_paired;
 } indicator_data_t;
@@ -221,11 +229,15 @@ static bool de_indicator_runtime_started;
 static void set_indicator_color(uint8_t bits) {
     static uint8_t last_bits = 0xFF;
 
+    if (bits == last_bits) {
+        return;
+    }
+
     for (uint8_t pos = 0; pos < ARRAY_SIZE(led_idx); pos++) {
         if (bits & BIT(pos)) {
-            (void)led_on(led_dev, led_idx[pos]);
+            led_on(led_dev, led_idx[pos]);
         } else {
-            (void)led_off(led_dev, led_idx[pos]);
+            led_off(led_dev, led_idx[pos]);
         }
     }
 
@@ -294,58 +306,66 @@ static inline bool debounce_ok(int64_t now, int64_t *last, int32_t interval_ms) 
     return true;
 }
 
-static inline void set_leds_gpio_off(void) {
-    for (int i = 0; i < ARRAY_SIZE(led_gpio); i++) {
-        gpio_pin_configure_dt(&led_gpio[i], GPIO_OUTPUT_INACTIVE);
-    }
+static inline bool led_rainbow_cycle(int64_t now, int32_t cycle_ms) {
+    static const uint8_t colors[] = {
+        LED_RED,
+        LED_YELLOW,
+        LED_GREEN,
+        LED_CYAN,
+        LED_BLUE,
+        LED_MAGENTA,
+    };
+    int64_t t = now % cycle_ms;
+    int64_t segment_ms = cycle_ms / ARRAY_SIZE(colors);
+    uint8_t index = t / segment_ms;
+    led_set(colors[index]);
 }
 
-static inline void set_leds_gpio_on(void) {
-    for (int i = 0; i < ARRAY_SIZE(led_gpio); i++) {
-        gpio_pin_configure_dt(&led_gpio[i], GPIO_OUTPUT_INACTIVE);
-    }
-}
 // =====================
 // TRANSIENT LIFECYCLE
 // =====================
 
 static void clear_transient_flags(int64_t now) {
-    if (ctx.flags.output_check && (now - ctx.timers.output_check_start >= DE_INDICATOR_OUTPUT_CHECK_MS)) {
-        ctx.flags.output_check = false;
+    if (ctx.flags.evt_output_check && (now - ctx.timers.output_check_start_ts >= DE_INDICATOR_OUTPUT_CHECK_MS)) {
+        ctx.flags.evt_output_check = false;
     }
 
-    if (ctx.flags.battery_check &&
-        (now - ctx.timers.battery_check_start >= DE_INDICATOR_BATTERY_CHECK_MS)) {
-        ctx.flags.battery_check = false;
+    if (ctx.flags.evt_output_usb && (now - ctx.timers.output_usb_start_ts >= DE_INDICATOR_OUTPUT_CHECK_MS)) {
+        ctx.flags.evt_output_usb = false;
     }
 
-    if (ctx.flags.ble_switch && (now - ctx.timers.ble_switch_start >= DE_INDICATOR_BLE_SWITCH_MS)) {
-        ctx.flags.ble_switch = false;
+    if (ctx.flags.evt_battery_check &&
+        (now - ctx.timers.battery_check_start_ts >= DE_INDICATOR_BATTERY_CHECK_MS)) {
+        ctx.flags.evt_battery_check = false;
     }
 
-    if (ctx.flags.boot && (now - ctx.timers.boot_start >= DE_INDICATOR_BOOT_MS)) {
-        ctx.flags.boot = false;
+    if (ctx.flags.evt_ble_switch && (now - ctx.timers.ble_switch_start_ts >= DE_INDICATOR_BLE_SWITCH_MS)) {
+        ctx.flags.evt_ble_switch = false;
     }
 
-    if (ctx.flags.layer_event && (now - ctx.timers.layer_start >= DE_INDICATOR_LAYER_EVENT_MS)) {
-        ctx.flags.layer_event = false;
+    if (ctx.flags.is_booting && (now - ctx.timers.boot_start_ts >= DE_INDICATOR_BOOT_MS)) {
+        ctx.flags.is_booting = false;
     }
 
-    if (ctx.flags.ble_connected &&
-        (now - ctx.timers.ble_connected_start >= DE_INDICATOR_BLE_CONNECTED_MS)) {
-        ctx.flags.ble_connected = false;
+    if (ctx.flags.evt_layer && (now - ctx.timers.layer_start_ts >= DE_INDICATOR_LAYER_EVENT_MS)) {
+        ctx.flags.evt_layer = false;
+    }
+
+    if (ctx.flags.ble_is_connected &&
+        (now - ctx.timers.ble_connected_start_ts >= DE_INDICATOR_BLE_CONNECTED_MS)) {
+        ctx.flags.ble_is_connected = false;
     }
 
     // Auto-clear BLE pairing if no state change after timeout
-    if (ctx.flags.ble_pairing &&
-        (now - ctx.timers.ble_pairing_start >= DE_INDICATOR_BLE_PAIRING_TIMEOUT_MS)) {
-        ctx.flags.ble_pairing = false;
+    if (ctx.flags.ble_is_pairing &&
+        (now - ctx.timers.ble_pairing_start_ts >= DE_INDICATOR_BLE_PAIRING_TIMEOUT_MS)) {
+        ctx.flags.ble_is_pairing = false;
     }
 
     // Auto-clear BLE connecting if no state change after timeout
-    if (ctx.flags.ble_connecting &&
-        (now - ctx.timers.ble_connecting_start >= DE_INDICATOR_BLE_CONNECTING_TIMEOUT_MS)) {
-        ctx.flags.ble_connecting = false;
+    if (ctx.flags.ble_is_connecting &&
+        (now - ctx.timers.ble_connecting_start_ts >= DE_INDICATOR_BLE_CONNECTING_TIMEOUT_MS)) {
+        ctx.flags.ble_is_connecting = false;
     }
 
 }
@@ -355,65 +375,74 @@ static void clear_transient_flags(int64_t now) {
 // =====================
 
 static de_indicator_state_t resolve_state_raw(int64_t now) {
+    // Allow BLE visual feedback when:
+    // - Not in USB mode
+    // - OR recently switched BLE profile
+    // - OR within grace window after BLE activity
+    bool ble_visual_allowed = !ctx.data.is_usb_output ||
+                              ctx.flags.evt_ble_switch ||
+                              ((now - ctx.timers.ble_last_activity_ts) < DE_INDICATOR_BLE_VISUAL_GRACE_MS);
 
-    bool ble_visual_allowed = !ctx.data.output_is_usb ||
-                              ctx.flags.ble_switch ||
-                              ((now - ctx.timers.ble_event_last) < DE_INDICATOR_BLE_VISUAL_GRACE_MS);
-
-    if (ctx.flags.sleep) {
+    if (ctx.flags.is_sleeping) {
         return DE_INDICATOR_STATE_SLEEP;
     }
 
-    if (ctx.flags.boot) {
+    if (ctx.flags.is_booting) {
         return DE_INDICATOR_STATE_BOOT;
     }
 
-    if (ctx.flags.output_check) {
+    if (ctx.flags.evt_output_check) {
         return DE_INDICATOR_STATE_OUTPUT_CHECK;
     }
 
-    if (ctx.flags.battery_check) {
+    if (ctx.flags.evt_output_usb) {
+        return DE_INDICATOR_STATE_OUTPUT_USB;
+    }
+
+    if (ctx.flags.evt_battery_check) {
         return DE_INDICATOR_STATE_BATTERY_CHECK;
     }
 
-    if (ctx.flags.ble_switch) {
+    if (ctx.flags.evt_ble_switch) {
         return DE_INDICATOR_STATE_BLE_SWITCH_EVENT;
     }
 
-    if (ctx.flags.layer_event) {
+    if (ctx.flags.evt_layer) {
         return DE_INDICATOR_STATE_LAYER_EVENT;
     }
 
     // Only show BLE states if visual feedback is allowed
     if (ble_visual_allowed) {
-        if (ctx.flags.ble_pairing) {
+        if (ctx.flags.ble_is_pairing) {
             return DE_INDICATOR_STATE_BLE_PAIRING;
         }
 
-        if (ctx.flags.ble_connecting) {
+        if (ctx.flags.ble_is_connecting) {
             return DE_INDICATOR_STATE_BLE_CONNECTING;
         }
 
-        if (ctx.flags.ble_connected) {
+        if (ctx.flags.ble_is_connected) {
             return DE_INDICATOR_STATE_BLE_CONNECTED;
         }
     }
 
-    if (ctx.data.battery_level <= 10) {
-        if ((now - ctx.timers.battery_warn_last) > DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS) {
-            ctx.timers.battery_warn_last = now;
-            return DE_INDICATOR_STATE_BATTERY_CRITICAL;
-        }
-    }
 
-    if (ctx.data.battery_level <= 20) {
-        if ((now - ctx.timers.battery_warn_last) > DE_INDICATOR_BATTERY_LOW_INTERVAL_MS) {
-            ctx.timers.battery_warn_last = now;
+    // Need to clear battery warning flag
+    int interval = (ctx.data.battery_percent <= 20) ? DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS :
+                   (ctx.data.battery_percent <= 30) ? DE_INDICATOR_BATTERY_LOW_INTERVAL_MS :
+                    60000;
+
+    if ((now - ctx.timers.battery_warn_last_ts) > interval) {
+        ctx.timers.battery_warn_last_ts = now;
+
+        if (ctx.data.battery_percent <= 20) {
+            return DE_INDICATOR_STATE_BATTERY_CRITICAL;
+        } else if (ctx.data.battery_percent <= 30) {
             return DE_INDICATOR_STATE_BATTERY_LOW;
         }
     }
 
-    if (ctx.data.capslock) {
+    if (ctx.data.capslock_on) {
         return DE_INDICATOR_STATE_CAPSLOCK;
     }
 
@@ -442,27 +471,27 @@ static de_indicator_state_t resolve_state(int64_t now) {
 // =====================
 
 static void render_battery_check(int64_t now) {
-    uint8_t battery_percent = ctx.data.battery_level;
-    int64_t battery_check_start_time = ctx.timers.battery_check_start;
+    uint8_t battery_percent = ctx.data.battery_percent;
+    int64_t battery_check_start_ts_time = ctx.timers.battery_check_start_ts;
     switch (battery_percent) {
-    case 0 ... 20:
-        led_flash_window(LED_RED, now, battery_check_start_time, DE_INDICATOR_BATTERY_CHECK_MS);
-        break;
-    case 21 ... 50:
-        led_flash_window(LED_YELLOW, now, battery_check_start_time, DE_INDICATOR_BATTERY_CHECK_MS);
-        break;
-    case 51 ... 100:
-        led_flash_window(LED_GREEN, now, battery_check_start_time, DE_INDICATOR_BATTERY_CHECK_MS);
-        break;
-    default:
-        led_flash_window(LED_MAGENTA, now, battery_check_start_time, DE_INDICATOR_BATTERY_CHECK_MS);
-        break;
+        case 0 ... 30:
+            led_flash_window(LED_RED, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
+            break;
+        case 31 ... 50:
+            led_flash_window(LED_YELLOW, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
+            break;
+        case 51 ... 100:
+            led_flash_window(LED_GREEN, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
+            break;
+        default:
+            led_flash_window(LED_MAGENTA, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
+            break;
     }
 }
 
-static void render_indicator(de_indicator_state_t state, int64_t now) {
+static void render_indicator_state(de_indicator_state_t state, int64_t now) {
 
-    if (ctx.flags.sleep) {
+    if (ctx.flags.is_sleeping) {
         led_off_all();
         return;
     }
@@ -476,8 +505,11 @@ static void render_indicator(de_indicator_state_t state, int64_t now) {
         break;
 
     case DE_INDICATOR_STATE_OUTPUT_CHECK:
-        // Use white flash for USB output, blue flash for BLE output
-        led_flash_window(ctx.data.output_is_usb ? LED_WHITE : LED_BLUE, now, ctx.timers.output_check_start, DE_INDICATOR_OUTPUT_CHECK_MS);
+        led_flash_window(ctx.data.is_usb_output ? LED_WHITE : LED_BLUE, now, ctx.timers.output_check_start_ts, DE_INDICATOR_OUTPUT_CHECK_MS);
+        break;
+    
+    case DE_INDICATOR_STATE_OUTPUT_USB:
+        led_flash_window(LED_WHITE, now, ctx.timers.output_usb_start_ts, DE_INDICATOR_OUTPUT_CHECK_MS);
         break;
 
     case DE_INDICATOR_STATE_BATTERY_CHECK:
@@ -485,27 +517,15 @@ static void render_indicator(de_indicator_state_t state, int64_t now) {
         break;
 
     case DE_INDICATOR_STATE_BLE_SWITCH_EVENT:
-        led_flash_double(LED_BLUE, now, ctx.timers.ble_switch_start);
+        led_flash_double(LED_BLUE, now, ctx.timers.ble_switch_start_ts);
         break;
 
-    case DE_INDICATOR_STATE_BOOT: {
-        static const uint8_t boot_colors[7] = {
-            LED_RED,
-            LED_YELLOW,
-            LED_GREEN,
-            LED_CYAN,
-            LED_BLUE,
-            LED_MAGENTA,
-            LED_WHITE,
-        };
-        int64_t delta = now - ctx.timers.boot_start;
-        uint8_t index = (delta / 120) % ARRAY_SIZE(boot_colors);
-        led_set(boot_colors[index]);
+    case DE_INDICATOR_STATE_BOOT: 
+        led_rainbow_cycle(now, DE_INDICATOR_BOOT_MS);
         break;
-    }
 
     case DE_INDICATOR_STATE_LAYER_EVENT:
-        led_flash_n(LED_CYAN, now, ctx.timers.layer_start, ctx.data.layer);
+        led_flash_n(LED_CYAN, now, ctx.timers.layer_start_ts, ctx.data.active_layer);
         break;
 
     case DE_INDICATOR_STATE_BLE_PAIRING:
@@ -517,7 +537,7 @@ static void render_indicator(de_indicator_state_t state, int64_t now) {
         break;
 
     case DE_INDICATOR_STATE_BLE_CONNECTED:
-        led_flash_window(LED_BLUE, now, ctx.timers.ble_connected_start, DE_INDICATOR_BLE_CONNECTED_MS);
+        led_flash_window(LED_BLUE, now, ctx.timers.ble_connected_start_ts, DE_INDICATOR_BLE_CONNECTED_MS);
         break;
 
     case DE_INDICATOR_STATE_BATTERY_LOW:
@@ -542,133 +562,105 @@ static void render_indicator(de_indicator_state_t state, int64_t now) {
 // PUBLIC API
 // =====================
 
+void de_indicator_process(void) {
+    int64_t now = k_uptime_get();
+    int64_t idle_time = now - ctx.timers.last_activity_time;
+    clear_transient_flags(now);
+    
+    // Turn off LEDs before is_sleeping timeout
+    #if IS_ENABLED(CONFIG_ZMK_SLEEP)
+    if (!ctx.flags.is_sleeping &&
+        !ctx.data.is_usb_output &&
+        ctx.timers.last_activity_time != 0 &&
+        idle_time > (CONFIG_ZMK_IDLE_SLEEP_TIMEOUT - DE_INDICATOR_PRE_SLEEP_MS)) {
+            ctx.flags.is_sleeping = true;
+            led_off_all();
+        }
+    #endif // IS_ENABLED(CONFIG_ZMK_SLEEP) 
+        
+    de_indicator_state_t state = resolve_state(now);
+    render_indicator_state(state, now);
+}
+
 static void de_indicator_update_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
-    de_indicator_update();
+    de_indicator_process();
     (void)k_work_schedule(&de_indicator_update_work, K_MSEC(DE_INDICATOR_UPDATE_INTERVAL_MS));
 }
 
-void de_indicator_init(void) {
-    memset(&ctx, 0, sizeof(ctx));
-
-    if (!device_is_ready(led_dev)) {
-        LOG_ERR("Indicator LED device is not ready");
-        return;
-    }
-
-    ctx.state = DE_INDICATOR_STATE_BOOT;
-    ctx.timers.state_enter_time = k_uptime_get();
-    ctx.flags.boot = true;
-    ctx.timers.boot_start = ctx.timers.state_enter_time;
-    led_off_all();
-
-    if (!de_indicator_runtime_started) {
-        k_work_init_delayable(&de_indicator_update_work, de_indicator_update_work_handler);
-        (void)k_work_schedule(&de_indicator_update_work, K_MSEC(DE_INDICATOR_UPDATE_INTERVAL_MS));
-        de_indicator_runtime_started = true;
-    }
-}
-
-void de_indicator_update(void) {
-    int64_t now = k_uptime_get();
-    clear_transient_flags(now);
-
-    if (ctx.flags.sleep) {
-        led_off_all();
-        return; 
-    }
-
-    de_indicator_state_t state = resolve_state(now);
-    render_indicator(state, now);
-}
-
-void de_indicator_blink_fast(uint8_t color, int64_t now) {
-    led_blink_periodic(color, now, DE_INDICATOR_BLINK_FAST_MS);
-}
-
-void de_indicator_blink_slow(uint8_t color, int64_t now) {
-    led_blink_periodic(color, now, DE_INDICATOR_BLINK_SLOW_MS);
-}
-
-void de_indicator_flash(uint8_t color, int64_t now, int duration_ms) {
-    if (duration_ms <= 0) {
-        led_off_all();
-        return;
-    }
-
-    if (((now / duration_ms) & 0x1) == 0) {
-        led_set(color);
-    } else {
-        led_off_all();
-    }
-}
-
 void de_indicator_trigger_battery_check(void) {
-#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
-    ctx.data.battery_level = zmk_battery_state_of_charge();
-#endif
-    ctx.flags.battery_check = true;
-    ctx.timers.battery_check_start = k_uptime_get();
+    #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+    ctx.data.battery_percent = zmk_battery_state_of_charge();
+    #endif 
+    ctx.flags.evt_battery_check = true;
+    ctx.timers.battery_check_start_ts = k_uptime_get();
 }
 
 void de_indicator_trigger_output_check(bool is_usb_output) {
     int64_t now = k_uptime_get();
 
-    ctx.data.output_is_usb = is_usb_output;
-    if (!ctx.flags.output_check) {
-        ctx.flags.output_check = true;
-        ctx.timers.output_check_start = now;
+    ctx.data.is_usb_output = is_usb_output;
+    if (!ctx.flags.evt_output_check) {
+        ctx.flags.evt_output_check = true;
+        ctx.timers.output_check_start_ts = now;
+    }
+}
+
+void de_indicator_trigger_show_led_output_usb(void) {
+    if (!ctx.flags.evt_output_usb && ctx.data.is_usb_output) {
+        ctx.flags.evt_output_usb = true;
+        ctx.timers.output_usb_start_ts = k_uptime_get();
     }
 }
 
 void de_indicator_trigger_ble_switch(void) {
-    ctx.flags.ble_switch = true;
-    ctx.timers.ble_switch_start = k_uptime_get();
+    ctx.flags.evt_ble_switch = true;
+    ctx.timers.ble_switch_start_ts = k_uptime_get();
 }
 
-void de_indicator_trigger_layer_event(uint8_t layer) {
-    ctx.flags.layer_event = true;
-    ctx.timers.layer_start = k_uptime_get();
-    ctx.data.layer = layer;
+void de_indicator_trigger_layer_event(uint8_t active_layer) {
+    ctx.flags.evt_layer = true;
+    ctx.timers.layer_start_ts = k_uptime_get();
+    ctx.data.active_layer = active_layer;
 }
 
-void de_indicator_ble_pairing(bool active) {
-    ctx.flags.ble_pairing = active;
-    if (active) {
-        ctx.flags.ble_connecting = false;
-        ctx.flags.ble_connected = false;
-        ctx.timers.ble_pairing_start = k_uptime_get();
+void de_indicator_set_ble_state(bool pairing, bool connecting, bool connected) {
+    ctx.flags.ble_is_pairing = pairing;
+    ctx.flags.ble_is_connecting = connecting;
+    ctx.flags.ble_is_connected = connected;
+    if (pairing) {
+        ctx.timers.ble_pairing_start_ts = k_uptime_get();
+    } else if (connecting) {
+        ctx.timers.ble_connecting_start_ts = k_uptime_get();
+    } else if (connected) {
+        ctx.timers.ble_connected_start_ts = k_uptime_get();
     }
 }
 
-void de_indicator_ble_connecting(bool active) {
-    ctx.flags.ble_connecting = active;
-    if (active) {
-        ctx.flags.ble_pairing = false;
-        ctx.flags.ble_connected = false;
-        ctx.timers.ble_connecting_start = k_uptime_get();
-    }
+void de_indicator_ble_pairing(void) {
+    de_indicator_set_ble_state(true, false, false);
+}
+
+void de_indicator_ble_connecting(void) {
+    de_indicator_set_ble_state(false, true, false);
 }
 
 void de_indicator_ble_connected(void) {
-    ctx.flags.ble_connected = true;
-    ctx.flags.ble_pairing = false;
-    ctx.flags.ble_connecting = false;
-    ctx.timers.ble_connected_start = k_uptime_get();
+    de_indicator_set_ble_state(false, false, true);
+}
+
+void de_indicator_ble_disabled(void) {
+    de_indicator_set_ble_state(false, false, false);
 }
 
 void de_indicator_set_battery(uint8_t percent) {
-    ctx.data.battery_level = percent;
+    ctx.data.battery_percent = percent;
 }
 
-void de_indicator_set_capslock(bool status) {
-    ctx.data.capslock = status;
-}
+void de_indicator_set_sleep(bool is_sleeping) {
+    ctx.flags.is_sleeping = is_sleeping;
 
-void de_indicator_set_sleep(bool sleep) {
-    ctx.flags.sleep = sleep;
-
-    if (sleep) {
+    if (is_sleeping) {
         led_off_all();
     }
 }
@@ -686,7 +678,7 @@ static int de_indicator_handle_keycode_user(const struct zmk_keycode_state_chang
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (ctx.flags.sleep) {
+    if (ctx.flags.is_sleeping) {
         return ZMK_EV_EVENT_BUBBLE;
     }
     
@@ -700,17 +692,16 @@ static int de_indicator_handle_keycode_user(const struct zmk_keycode_state_chang
             return ZMK_EV_EVENT_HANDLED;
 
         case SHOW_LED_OUTPUT_KEYCODE:
-            de_indicator_trigger_output_check(ctx.data.output_is_usb);
+            de_indicator_trigger_output_check(ctx.data.is_usb_output);
+            return ZMK_EV_EVENT_HANDLED;
+
+        case SHOW_LED_OUTPUT_USB_KEYCODE:
+            // de_indicator_ble_disabled();
+            de_indicator_trigger_show_led_output_usb();
             return ZMK_EV_EVENT_HANDLED;
         
         case SHOW_LED_BLE_PROFILE_STATUS_KEYCODE:
             de_indicator_trigger_ble_profile_status();
-            return ZMK_EV_EVENT_HANDLED;
-
-        case STOP_LED_BLE_PROFILE_STATUS_KEYCODE:
-            ctx.flags.ble_pairing = false;
-            ctx.flags.ble_connecting = false;
-            ctx.flags.ble_connected = false;
             return ZMK_EV_EVENT_HANDLED;
 
         default:
@@ -743,7 +734,7 @@ static int de_indicator_ble_profile_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (!debounce_ok(now, &ctx.timers.ble_event_last, DE_INDICATOR_BLE_EVENT_DEBOUNCE_MS)) {
+    if (!debounce_ok(now, &ctx.timers.ble_last_activity_ts, DE_INDICATOR_BLE_EVENT_DEBOUNCE_MS)) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
@@ -755,22 +746,26 @@ static int de_indicator_ble_profile_listener(const zmk_event_t *eh) {
     }
 
     if (zmk_ble_active_profile_is_connected()) {
-        ctx.flags.ble_connected = true;
-        ctx.flags.ble_connecting = false;
-        ctx.flags.ble_pairing = false;
-        ctx.timers.ble_connected_start = now;
+        de_indicator_ble_connected();
         return ZMK_EV_EVENT_BUBBLE;
     }
 
     bt_addr_le_t *addr = zmk_ble_active_profile_addr();
     bool ble_profile_paired = (addr != NULL) && !bt_addr_le_eq(addr, BT_ADDR_LE_ANY);
 
-    ctx.flags.ble_connected = false;
-    ctx.flags.ble_connecting = ble_profile_paired;
-    ctx.flags.ble_pairing = !ble_profile_paired;
+    if (ble_profile_paired) {
+        de_indicator_ble_connecting();
+        return ZMK_EV_EVENT_BUBBLE;
+    } else {
+        de_indicator_ble_pairing();
+        return ZMK_EV_EVENT_BUBBLE;
+    }
 
     return ZMK_EV_EVENT_BUBBLE;
 }
+
+ZMK_LISTENER(de_indicator_v2_ble_profile, de_indicator_ble_profile_listener);
+ZMK_SUBSCRIPTION(de_indicator_v2_ble_profile, zmk_ble_active_profile_changed);
 
 void de_indicator_trigger_ble_profile_status(void) {
     int64_t now = k_uptime_get();
@@ -781,14 +776,14 @@ void de_indicator_trigger_ble_profile_status(void) {
     bt_addr_le_t *addr = zmk_ble_active_profile_addr();
     ctx.data.ble_profile_paired = (addr != NULL) && !bt_addr_le_eq(addr, BT_ADDR_LE_ANY);
 
-    ctx.timers.ble_event_last = now;
+    ctx.timers.ble_last_activity_ts = now;
 
     if (ctx.data.ble_profile_connected) {
         de_indicator_ble_connected();
     } else if (ctx.data.ble_profile_paired) {
-        de_indicator_ble_connecting(true);
+        de_indicator_ble_connecting();
     } else {
-        de_indicator_ble_pairing(true);
+        de_indicator_ble_pairing();
     }
 }
 
@@ -800,31 +795,26 @@ static int de_indicator_endpoint_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (!debounce_ok(now, &ctx.timers.endpoint_event_last,
+    if (!debounce_ok(now, &ctx.timers.endpoint_event_last_ts,
                      DE_INDICATOR_ENDPOINT_DEBOUNCE_MS)) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
     bool is_usb = (ev->endpoint.transport == ZMK_TRANSPORT_USB);
-    bool prev_is_usb = ctx.data.output_is_usb;
+    bool prev_is_usb = ctx.data.is_usb_output;
 
-    ctx.data.output_is_usb = is_usb;
+    ctx.data.is_usb_output = is_usb;
 
-    // 
     if (is_usb == prev_is_usb) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    // 
     bool ble_switch_recent =
-        (now - ctx.timers.ble_event_last) < DE_INDICATOR_OUTPUT_CHECK_SUPPRESS_AFTER_BLE_MS;
+        (now - ctx.timers.ble_last_activity_ts) < DE_INDICATOR_OUTPUT_CHECK_SUPPRESS_AFTER_BLE_MS;
 
     // ===== USB =====
     if (is_usb) {
-        // When switching to USB, clear BLE profile status indicators
-        ctx.flags.ble_pairing = false;
-        ctx.flags.ble_connecting = false;
-        ctx.flags.ble_connected = false;
+        de_indicator_ble_disabled();
 
         if (!ble_switch_recent) {
             de_indicator_trigger_output_check(true);
@@ -833,21 +823,25 @@ static int de_indicator_endpoint_changed_listener(const zmk_event_t *eh) {
 
     // ===== BLE =====
     else {
-        bool ble_recent_activity = (now - ctx.timers.ble_event_last < 50);
+        // Short window to avoid false output check trigger after BLE event
+        bool ble_recent_activity = (now - ctx.timers.ble_last_activity_ts < 50);
         
         bool no_ble_activity =
-            !ctx.flags.ble_pairing &&
-            !ctx.flags.ble_connecting &&
-            !ctx.flags.ble_connected &&
+            !ctx.flags.ble_is_pairing &&
+            !ctx.flags.ble_is_connecting &&
+            !ctx.flags.ble_is_connected &&
             !ble_recent_activity;
 
-        if (no_ble_activity && !ctx.flags.output_check) {
+        if (no_ble_activity && !ctx.flags.evt_output_check) {
             de_indicator_trigger_output_check(false);
         }
     }
 
     return ZMK_EV_EVENT_BUBBLE;
 }
+
+ZMK_LISTENER(de_indicator_v2_endpoint, de_indicator_endpoint_changed_listener);
+ZMK_SUBSCRIPTION(de_indicator_v2_endpoint, zmk_endpoint_changed);
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 static int de_indicator_battery_listener(const zmk_event_t *eh) {
@@ -862,21 +856,25 @@ static int de_indicator_battery_listener(const zmk_event_t *eh) {
 }
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+ZMK_LISTENER(de_indicator_v2_battery, de_indicator_battery_listener);       
+ZMK_SUBSCRIPTION(de_indicator_v2_battery, zmk_battery_state_changed);
+#endif
+
 static int de_indicator_hid_listener(const zmk_event_t *eh) {
-
-    if (ctx.flags.sleep) {
-        return ZMK_EV_EVENT_BUBBLE; 
-    }
-
     const struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
 
-    if (!ev) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
+    if (!ev) return ZMK_EV_EVENT_BUBBLE;
+    
+    bool caps = ((zmk_hid_indicators_get_current_profile() & CAPSLOCK_BIT) != 0);
+    ctx.data.capslock_on = caps;
+    ctx.timers.capslock_last_update_ts = k_uptime_get();
 
-    de_indicator_set_capslock((zmk_hid_indicators_get_current_profile() & CAPSLOCK_BIT) != 0);
     return ZMK_EV_EVENT_BUBBLE;
 }
+
+ZMK_LISTENER(de_indicator_v2_hid, de_indicator_hid_listener);
+ZMK_SUBSCRIPTION(de_indicator_v2_hid, zmk_hid_indicators_changed);
 
 static int de_indicator_layer_listener(const zmk_event_t *eh) {
     const struct zmk_layer_state_changed *ev = as_zmk_layer_state_changed(eh);
@@ -886,18 +884,21 @@ static int de_indicator_layer_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (!debounce_ok(now, &ctx.timers.layer_event_last, DE_INDICATOR_LAYER_EVENT_DEBOUNCE_MS)) {
+    if (!debounce_ok(now, &ctx.timers.layer_event_last_ts, DE_INDICATOR_LAYER_EVENT_DEBOUNCE_MS)) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    uint8_t layer = zmk_keymap_highest_layer_active();
-    if (layer > 5) {
-        layer = 5;
+    uint8_t active_layer = zmk_keymap_highest_layer_active();
+    if (active_layer > 5) {
+        active_layer = 5;
     }
 
-    de_indicator_trigger_layer_event(layer == 0 ? 1 : layer);
+    de_indicator_trigger_layer_event(active_layer == 0 ? 1 : active_layer);
     return ZMK_EV_EVENT_BUBBLE;
 }
+
+ZMK_LISTENER(de_indicator_v2_layer, de_indicator_layer_listener);
+ZMK_SUBSCRIPTION(de_indicator_v2_layer, zmk_layer_state_changed);
 
 #if DE_INDICATOR_HAS_ACTIVITY_EVENT
 static int de_indicator_activity_listener(const zmk_event_t *eh) {
@@ -907,19 +908,19 @@ static int de_indicator_activity_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
+    if (ctx.flags.is_sleeping) {
+        ctx.flags.is_sleeping = false;
+    }
+
 #ifdef ZMK_ACTIVITY_SLEEP
     if (ev->state == ZMK_ACTIVITY_SLEEP) {
         de_indicator_set_sleep(true);
-        led_off_all();
-        // set_leds_gpio_off();
-        k_busy_wait(1000);
         return ZMK_EV_EVENT_BUBBLE;
     }
 #endif // ZMK_ACTIVITY_SLEEP
 
 #ifdef ZMK_ACTIVITY_ACTIVE
     if (ev->state == ZMK_ACTIVITY_ACTIVE) {
-        // set_leds_gpio_on();
         de_indicator_set_sleep(false);
         return ZMK_EV_EVENT_BUBBLE;
     }
@@ -929,27 +930,63 @@ static int de_indicator_activity_listener(const zmk_event_t *eh) {
 }
 #endif // DE_INDICATOR_HAS_ACTIVITY_EVENT
 
-ZMK_LISTENER(de_indicator_v2_endpoint, de_indicator_endpoint_changed_listener);
-ZMK_SUBSCRIPTION(de_indicator_v2_endpoint, zmk_endpoint_changed);
-
-ZMK_LISTENER(de_indicator_v2_ble_profile, de_indicator_ble_profile_listener);
-ZMK_SUBSCRIPTION(de_indicator_v2_ble_profile, zmk_ble_active_profile_changed);
-
-#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
-ZMK_LISTENER(de_indicator_v2_battery, de_indicator_battery_listener);
-ZMK_SUBSCRIPTION(de_indicator_v2_battery, zmk_battery_state_changed);
-#endif
-
-ZMK_LISTENER(de_indicator_v2_hid, de_indicator_hid_listener);
-ZMK_SUBSCRIPTION(de_indicator_v2_hid, zmk_hid_indicators_changed);
-
-ZMK_LISTENER(de_indicator_v2_layer, de_indicator_layer_listener);
-ZMK_SUBSCRIPTION(de_indicator_v2_layer, zmk_layer_state_changed);
-
 #if DE_INDICATOR_HAS_ACTIVITY_EVENT
 ZMK_LISTENER(de_indicator_v2_activity, de_indicator_activity_listener);
 ZMK_SUBSCRIPTION(de_indicator_v2_activity, zmk_activity_state_changed);
 #endif
+
+static int de_indicator_activity_real_listener(const zmk_event_t *eh) {
+    const struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+
+    if (!ev) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+
+    // chỉ khi key DOWN
+    if (ev->state) {
+        ctx.timers.last_activity_time = k_uptime_get();
+
+        if (ctx.flags.is_sleeping) {
+            ctx.flags.is_sleeping = false;
+        }
+    }
+
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+ZMK_LISTENER(de_indicator_activity_real, de_indicator_activity_real_listener);
+ZMK_SUBSCRIPTION(de_indicator_activity_real, zmk_position_state_changed);
+
+// =====================
+//      INIT SYSTEM
+// =====================
+void de_indicator_init(void) {
+    memset(&ctx, 0, sizeof(ctx));
+
+    if (!device_is_ready(led_dev)) {
+        LOG_ERR("Indicator LED device is not ready");
+        return;
+    }
+
+    int64_t now = k_uptime_get();
+    // Initialize last activity time to now to prevent immediate auto-is_sleeping on startup
+    ctx.timers.last_activity_time = now;  
+    ctx.flags.is_sleeping = false;
+    ctx.data.capslock_on = false;
+    ctx.flags.capslock_valid = false;
+
+    ctx.state = DE_INDICATOR_STATE_BOOT;
+    ctx.timers.state_enter_time = k_uptime_get();
+    ctx.flags.is_booting = true;
+    ctx.timers.boot_start_ts = ctx.timers.state_enter_time;
+    led_off_all();
+
+    if (!de_indicator_runtime_started) {
+        k_work_init_delayable(&de_indicator_update_work, de_indicator_update_work_handler);
+        (void)k_work_schedule(&de_indicator_update_work, K_MSEC(DE_INDICATOR_UPDATE_INTERVAL_MS));
+        de_indicator_runtime_started = true;
+    }
+}
 
 static int de_indicator_v2_sys_init(const struct device *dev) {
     ARG_UNUSED(dev);

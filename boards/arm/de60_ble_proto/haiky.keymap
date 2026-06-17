@@ -1,0 +1,107 @@
+/* =========================
+ * Hải Kỷ Custom Macros
+ * DE BLE ZMK
+
+haiky91na! 
+haiky990na!
+290891
+corp\ky91.hai
+ky91.hai
+Ctrl+alt+del
+Win+L
+
+ * ========================= */
+
+/ {
+    behaviors {
+
+        /* Password 1 */
+        hk_pw1: hk_pw1 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK PASS 1";
+            bindings = <
+                &kp H &kp A &kp I &kp K &kp Y
+                &kp N9 &kp N1
+                &kp N &kp A
+                &kp EXCL
+            >;
+        };
+
+        /* Password 2 */
+        hk_pw2: hk_pw2 {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK PASS 2";
+            bindings = <
+                &kp H &kp A &kp I &kp K &kp Y
+                &kp N9 &kp N9 &kp N0
+                &kp N &kp A
+                &kp EXCL
+            >;
+        };
+
+        /* PIN */
+        hk_pin: hk_pin {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK PIN";
+            bindings = <
+                &kp N2 &kp N9 &kp N0
+                &kp N8 &kp N9 &kp N1
+            >;
+        };
+
+        /* Domain Login */
+        hk_corp: hk_corp {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK CORP";
+            bindings = <
+                &kp C &kp O &kp R &kp P
+                &kp BSLH
+                &kp K &kp Y &kp N9 &kp N1
+                &kp DOT
+                &kp H &kp A &kp I
+            >;
+        };
+
+        /* Username */
+        hk_user: hk_user {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK USER";
+            bindings = <
+                &kp K &kp Y &kp N9 &kp N1
+                &kp DOT
+                &kp H &kp A &kp I
+            >;
+        };
+
+        /* Ctrl + Alt + Del */
+        hk_logout: hk_logout {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK LOGOUT";
+            bindings = <
+                &macro_press &kp LCTRL
+                &macro_press &kp LALT
+                &kp DEL
+                &macro_release &kp LALT
+                &macro_release &kp LCTRL
+            >;
+        };
+
+        /* Win + L */
+        hk_lock: hk_lock {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            display-name = "HK LOCK";
+            bindings = <
+                &macro_press &kp LGUI
+                &kp L
+                &macro_release &kp LGUI
+            >;
+        };
+    };
+};

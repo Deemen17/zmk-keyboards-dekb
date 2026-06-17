@@ -62,13 +62,27 @@
             ;
     };
 
+    // wakeup_scan: wakeup_scan {
+    //     compatible = "zmk,kscan-gpio-matrix";
+    //     wakeup-source;
+    //     diode-direction = "col2row";
+    //     // KEY D at RC(2,3)
+    //     col-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;                       // col 3
+    //     row-gpios = <&gpio0  4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;    // row 2
+    // };
+
+    keys {
+        compatible = "gpio-keys";
+        soft_off_gpio_key: soft_off_gpio_key {
+            gpios = <&gpio0 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;     // row 2
+        };
+    };
+
     wakeup_scan: wakeup_scan {
-        compatible = "zmk,kscan-gpio-matrix";
+        compatible = "zmk,gpio-key-wakeup-trigger";
+        trigger = <&soft_off_gpio_key>;
         wakeup-source;
-        diode-direction = "col2row";
-        // KEY D at RC(2,3)
-        col-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;                       // col 3
-        row-gpios = <&gpio0  4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;    // row 2
+        extra-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>; // col 3
     };
 
     soft_off_wakers {

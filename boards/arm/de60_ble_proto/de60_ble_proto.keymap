@@ -1,5 +1,8 @@
 #include "../common.keymap"
 
+#include "haiky.keymap"
+// #define RGB_KEYCODE
+
 / {
     keymap {
         compatible = "zmk,keymap";
@@ -40,11 +43,20 @@
         layer_3 {
             label = "Layer 3";
             bindings = <
-&de_out   &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans &DE_BOOT
-&DE_USB   &DE_BT1 &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSPD  &UGSPI  &UGEFF
-&de_batt  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGHUI  &UGSAD  &UGSAI          &UGTOG       
-&de_sleep         &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGBRD  &UGBRI  &trans  &trans  &trans 
-&trans    &trans  &trans                          &trans                                  &trans  &trans  &trans  
+
+#ifdef RGB_KEYCODE
+&DE_OUT &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans &DE_BLD
+&DE_USB &DE_BT1 &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSPD  &UGSPI  &UGEFF
+&DE_BAT &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGHUI  &UGSAD  &UGSAI          &UGTOG       
+&DE_SLP         &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGBRD  &UGBRI  &trans  &trans  &trans 
+&trans  &trans  &trans                          &trans                                  &trans  &trans  &trans
+#else
+&DE_OUT &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans &DE_BLD
+&DE_USB &DE_BT1 &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&DE_BAT &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans   
+&DE_SLP         &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans 
+&trans  &trans  &trans                          &trans                                  &trans  &trans  &trans
+#endif
             >;
         };
 

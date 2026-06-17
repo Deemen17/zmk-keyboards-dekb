@@ -21,17 +21,21 @@
 #define ZMK_POINTING_DEFAULT_MOVE_VAL 1000  // default: 600
 #define ZMK_POINTING_DEFAULT_SCRL_VAL 80    // default: 10
 
-#define SHUTDOWN_LED_SLEEP_KEYCODE 0xAC
-#define STOP_LED_BLE_PROFILE_STATUS_KEYCODE 0xAF
-#define SHOW_LED_BATTERY_KEYCODE 0xAB
-#define SHOW_LED_OUTPUT_KEYCODE 0xAD
-#define SHOW_LED_BLE_PROFILE_STATUS_KEYCODE 0xAE
+#define SHUTDOWN_LED_SLEEP_KEYCODE 0xDE01
+#define SHOW_LED_BATTERY_KEYCODE 0xDE02
+#define SHOW_LED_OUTPUT_KEYCODE 0xDE03
+#define SHOW_LED_OUTPUT_USB_KEYCODE 0xDE04
+#define SHOW_LED_BLE_PROFILE_STATUS_KEYCODE 0xDE05
+#define DE_KEYCODE_BUZZER_TOGGLE 0xDE06
 
-#define DE_BOOT de_boot 0 0
+#define DE_BLD de_boot 0 0
+#define DE_OUT de_check_output
 #define DE_USB de_usb
 #define DE_BT1 de_bt1 0 0
 #define DE_BT2 de_bt2 0 1
 #define DE_BT3 de_bt3 0 2
+#define DE_BAT de_battery
+#define DE_SLP de_sleep 0 0
 
 #define UGTOG rgb_ug RGB_TOG
 #define UGBRD rgb_ug RGB_BRD
@@ -51,23 +55,21 @@
         fw_ver: fw_ver {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            display-name = "#DEKB BLE ZMK Firmware 20260412";
+            display-name = "#DEKB BLE ZMK Firmware 20260426";
             bindings = <&kp D &kp E &kp K &kp B &kp LCTRL &kp LALT &kp LSHIFT &kp LGUI &kp RCTRL &kp RALT &kp RSHIFT &kp RGUI>;
         };
 
-        de_batt: de_batt {
-            compatible = "zmk,behavior-tap-dance";
+        de_battery: de_battery {
+            compatible = "zmk,behavior-macro";
             display-name = "DE CHECK BATTERY";
             #binding-cells = <0>;
-            tapping-term-ms = <0>;
             bindings = <&kp SHOW_LED_BATTERY_KEYCODE>;
         };
 
-        de_out: de_out {
-            compatible = "zmk,behavior-tap-dance";
+        de_check_output: de_check_output {
+            compatible = "zmk,behavior-macro";
             display-name = "DE CHECK OUTPUT";
             #binding-cells = <0>;
-            tapping-term-ms = <0>;
             bindings = <&kp SHOW_LED_OUTPUT_KEYCODE>;
         };
 
@@ -76,7 +78,7 @@
             display-name = "DE USB";
             #binding-cells = <0>;
             wait-ms = <30>;
-            bindings = <&out OUT_USB>, <&kp STOP_LED_BLE_PROFILE_STATUS_KEYCODE>, <&kp SHOW_LED_OUTPUT_KEYCODE>;
+            bindings = <&out OUT_USB>, <&kp SHOW_LED_OUTPUT_USB_KEYCODE>;
         };
 
         de_ble_connect: de_ble_connect {
@@ -207,6 +209,16 @@
             bindings = <&mo>, <&kp>;
             display-name = "Layer-Tap(HP)";
         };
+
+        space_fn1: space_fn1 {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "hold-preferred";
+            tapping-term-ms = <220>;
+            quick-tap-ms = <180>;
+            bindings = <&mo>, <&kp>;
+            display-name = "Space FN1";
+        };
         
         // Mouse 
         mkp_left: mouse_key_press_left {
@@ -330,5 +342,6 @@
             key-positions = <0 1 2 3>; // 1 and 5
             bindings = <&fw_ver>;
         };
+
     };
 };

@@ -31,8 +31,8 @@ static inline bool buzzer_is_enabled(void);
 #if DT_NODE_HAS_STATUS(BUZZER_NODE, okay)
 
 // Optimized buzzer configuration
-#define BUZZER_THREAD_STACK_SIZE 1024
-#define BUZZER_THREAD_PRIORITY K_PRIO_COOP(8)
+#define BUZZER_THREAD_STACK_SIZE 2048
+#define BUZZER_THREAD_PRIORITY K_LOWEST_APPLICATION_THREAD_PRIO
 #define BLE_MONITOR_INTERVAL_MS 3000
 #define MAX_BLE_PROFILES 5
 
@@ -321,9 +321,8 @@ static inline void play_profile_sound(uint8_t profile_idx) {
         return;
     }
 
-    BUZZER_LOG_INF("Playing profile melody %d with %d notes directly", profile_idx, melody_len);
-    play_melody(melody, melody_len);
-    BUZZER_LOG_INF("Profile %d sound played directly", profile_idx + 1);
+    pending_profile = profile_idx;
+    k_work_submit_to_queue(&buzzer_state.work_queue, &profile_work);
 }
 
 static inline void play_startup_sound(void) {
@@ -412,7 +411,7 @@ static int buzzer_listener(const zmk_event_t *eh) {
             break;
     }
 
-    return ZMK_EV_EVENT_HANDLED;
+    return ZMK_EV_EVENT_BUBBLE;
 }
 
 static int endpoint_listener(const zmk_event_t *eh) {
@@ -574,18 +573,9 @@ static int buzzer_init(void) {
     buzzer_state.connection_states[buzzer_state.current_profile] =
         zmk_ble_active_profile_is_connected();
 
-    // Delay for system stability
-    k_msleep(300);
-
-    // Play startup sound and quick self-test tone sequence
-    play_startup_sound();
-    BUZZER_LOG_INF("Buzzer startup sound triggered");
-
-    buzzer_state.enabled = true;
-    play_melody(toggle_on_melody, 1);
-    k_msleep(100);
-    play_melody(toggle_off_melody, 1);
-    BUZZER_LOG_INF("Buzzer self-test tone sequence done");
+    // Avoid playing sound from early startup. If the firmware faults/reboots, startup sound loops
+    // make recovery painful and can mask the real problem.
+    BUZZER_LOG_INF("Buzzer initialized");
 
     // Start BLE monitoring with optimized interval
     k_timer_start(&ble_monitor_timer, K_MSEC(BLE_MONITOR_INTERVAL_MS),
