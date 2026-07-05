@@ -1,0 +1,12 @@
+if SHIELD_DENGLE
+
+config ZMK_KEYBOARD_NAME
+    default "DENGLE"
+
+config ZMK_USB
+    default y
+
+config ZMK_BLE
+    default n
+
+endif

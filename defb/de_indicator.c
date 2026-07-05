@@ -411,7 +411,7 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
     // Battery warnings
     int64_t time_since_last_warn = now - ctx.timers.battery_warn_last_ts;
 
-    if (ctx.data.battery_percent <= 10) {
+    if (ctx.data.battery_percent <= 5) {
         // Chỉ bắt đầu chu kỳ Deadly mới khi đã đủ thời gian lặp
         if (time_since_last_warn >= DE_INDICATOR_BATTERY_DEADLY_INTERVAL_MS) {
             ctx.timers.battery_warn_last_ts = now;     // Bắt đầu chu kỳ mới
@@ -422,7 +422,7 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
             return DE_INDICATOR_STATE_BATTERY_DEADLY;
         }
     }
-    else if (ctx.data.battery_percent <= 20) {
+    else if (ctx.data.battery_percent <= 10) {
         if (time_since_last_warn >= DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS) {
             ctx.timers.battery_warn_last_ts = now;
             return DE_INDICATOR_STATE_BATTERY_CRITICAL;
@@ -469,10 +469,10 @@ static void render_battery_check(int64_t now) {
     uint8_t battery_percent = ctx.data.battery_percent;
     int64_t battery_check_start_ts_time = ctx.timers.battery_check_start_ts;
     switch (battery_percent) {
-        case 1 ... 30:
+        case 0 ... 10:
             led_flash_window(LED_RED, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
             break;
-        case 31 ... 50:
+        case 11 ... 50:
             led_flash_window(LED_YELLOW, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
             break;
         case 51 ... 100:
@@ -583,7 +583,7 @@ static void render_indicator_state(de_indicator_state_t state, int64_t now) {
         led_flash_window(LED_BLUE, now, ctx.timers.ble_connected_start_ts, DE_INDICATOR_BLE_CONNECTED_TIMEOUT_MS);
         break;
 
-    case DE_INDICATOR_STATE_BATTERY_DEADLY:
+    // case DE_INDICATOR_STATE_BATTERY_DEADLY:
     case DE_INDICATOR_STATE_BATTERY_LOW:
     case DE_INDICATOR_STATE_BATTERY_CRITICAL:
         render_battery_warning(now, state);

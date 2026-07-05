@@ -25,7 +25,7 @@
 
         layer_1 {
             label = "Layer 1";
-            bindings = < 
+            bindings = <
 &trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
@@ -36,31 +36,9 @@
 
         layer_2 {
             label = "Layer 2";
-            bindings = <
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans                         &trans                  &trans  &trans  &trans  &trans  &trans
-            >;
-        };
-
-        layer_3 {
-            label = "Layer 3";
-            bindings = <
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans          &trans
-&trans  &trans  &trans  &trans &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans                         &trans                  &trans  &trans  &trans  &trans  &trans
-            >;
-        };
-
-        layer_4 {
-            label = "Layer 4";
             bindings = < 
 &kp GRAVE &kp F1   &kp F2  &kp F3  &kp F4  &kp F5  &kp F6  &kp F7  &kp F8  &kp F9  &kp F10 &kp F11 &kp F12 &kp F13 &DE_BLD
-&DE_USB   &DE_BT1  &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSPD  &UGSPI
+&DE_USB   &DE_BT1  &DE_BT2 &DE_BT3 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSPD  &UGSPI  &trans
 &DE_BAT   &trans   &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGHUD  &UGHUI          &UGTOG
 &DE_SLP   &trans   &trans  &trans  &trans  &trans  &trans  &trans  &trans  &UGSAD  &UGSAI  &trans  &UGBRI  &trans
 &DE_OUT   &trans   &trans                          &trans                  &trans  &trans  &UGEFF  &UGBRD  &UGEFR

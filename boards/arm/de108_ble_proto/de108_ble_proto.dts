@@ -102,7 +102,7 @@ matrix_transform_fullsize_108_duplex: matrix_transform_fullsize_108_duplex {
     /*  lshift   nubs     z       x       c       v       b       n       m       ,       .        /      rshift  rshift              up                   1        2        3         enter   */
         RC(8,0)  RC(9,0)  RC(8,1) RC(9,1) RC(8,2) RC(9,2) RC(8,3) RC(9,4) RC(8,4) RC(9,5) RC(8,5) RC(9,6) RC(8,6) RC(9,7)             RC(9,8)              RC(9,9)  RC(8,9)  RC(9,10)  RC(8,10)
 
-    /*  lctrl    lwin     lalt                            space                           ralt     menu     fn       rctrl    left     down     right      0         0        dot      enter   */
+    /*  lctrl    lwin     lalt                            space                           ralt     menu     fn       rctrl    left     down     right      0        0        dot       enter   */
         RC(10,0) RC(11,0) RC(10,1)                        RC(10,3)                        RC(10,5) RC(11,6) RC(10,6) RC(11,7) RC(10,7) RC(11,8) RC(10,8)   RC(11,9) RC(10,9) RC(11,10) RC(10,10)
 
     >;
