@@ -61,7 +61,7 @@ static const uint8_t led_idx[] = {
 #define DE_INDICATOR_BLINK_FAST_MS 120
 #define DE_INDICATOR_BLINK_SLOW_MS 500
 #define DE_INDICATOR_BATTERY_CHECK_MS 1500
-#define DE_INDICATOR_OUTPUT_CHECK_MS 800
+#define DE_INDICATOR_OUTPUT_CHECK_MS 3000
 
 #define DE_INDICATOR_BLE_SWITCH_MS 250
 #define DE_INDICATOR_BLE_CONNECTED_TIMEOUT_MS 3000
@@ -74,17 +74,24 @@ static const uint8_t led_idx[] = {
 
 #define DE_INDICATOR_BOOT_MS 840
 
-#define DE_INDICATOR_BATTERY_DEADLY_INTERVAL_MS 10000
-#define DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS 30000
-#define DE_INDICATOR_BATTERY_LOW_INTERVAL_MS 45000
+#define DE_INDICATOR_BATTERY_DEADLY     10
+#define DE_INDICATOR_BATTERY_CRITICAL   20
+#define DE_INDICATOR_BATTERY_LOW        30
 
-#define DE_INDICATOR_BATTERY_LOW_DURATION_MS          10000     
-#define DE_INDICATOR_BATTERY_CRITICAL_DURATION_MS     10000     
-#define DE_INDICATOR_BATTERY_DEADLY_DURATION_MS       0    
+#define DE_INDICATOR_BATTERY_CHECK_MEDIUM_MS 1000
+#define DE_INDICATOR_BATTERY_CHECK_HIGH_MS   2000
+
+#define DE_INDICATOR_BATTERY_DEADLY_REMIND_INTERVAL_MS     30000
+#define DE_INDICATOR_BATTERY_CRITICAL_REMIND_INTERVAL_MS   30000
+#define DE_INDICATOR_BATTERY_LOW_REMIND_INTERVAL_MS        (5 * 60 * 1000)
+
+#define DE_INDICATOR_BATTERY_DEADLY_DURATION_MS       10000
+#define DE_INDICATOR_BATTERY_CRITICAL_DURATION_MS     10000
+#define DE_INDICATOR_BATTERY_LOW_DURATION_MS          5000
 
 #define DE_INDICATOR_BATTERY_FLASH_PERIOD_LOW_MS      500       
 #define DE_INDICATOR_BATTERY_FLASH_PERIOD_CRITICAL_MS 300       
-#define DE_INDICATOR_BATTERY_FLASH_PERIOD_DEADLY_MS   100  
+#define DE_INDICATOR_BATTERY_FLASH_PERIOD_DEADLY_MS   200  
 
 #define DE_INDICATOR_STATE_MIN_HOLD_MS 120
 
@@ -245,29 +252,45 @@ static inline void led_flash_double(uint8_t color, int64_t now, int64_t start) {
 }
 
 static inline void led_flash_n(uint8_t color, int64_t now, int64_t start, uint8_t count) {
+
     if (count == 0) {
         led_off_all();
         return;
     }
 
-    const int32_t on_time_ms  = 120;  
-    const int32_t off_time_ms = 120;   
-    const int32_t cycle_ms    = on_time_ms + off_time_ms;  
+    const int32_t start_delay_ms = 360;
 
     int64_t elapsed = now - start;
-    int32_t total_duration = (int32_t)count * cycle_ms;
+
+    if (elapsed < start_delay_ms) {
+        led_off_all();
+        return;
+    }
+
+    elapsed -= start_delay_ms;
+
+    int32_t on_time_ms  = 350;
+    int32_t off_time_ms = 100;
+
+    if (count > 2) {
+        on_time_ms  = 250;
+        off_time_ms = 100;
+    }
+
+    const int32_t cycle_ms = on_time_ms + off_time_ms;
+    const int32_t total_duration = count * cycle_ms;
 
     if (elapsed >= total_duration) {
         led_off_all();
         return;
     }
 
-    int32_t position = (int32_t)(elapsed % cycle_ms);
+    int32_t position = elapsed % cycle_ms;
 
     if (position < on_time_ms) {
-        led_set(color);        // Pha sáng
+        led_set(color);
     } else {
-        led_off_all();         // Pha tắt
+        led_off_all();
     }
 }
 
@@ -407,23 +430,21 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
     if (ctx.data.capslock_on) {
         return DE_INDICATOR_STATE_CAPSLOCK;
     }
-
+    
     // Battery warnings
     int64_t time_since_last_warn = now - ctx.timers.battery_warn_last_ts;
 
-    if (ctx.data.battery_percent <= 5) {
-        // Chỉ bắt đầu chu kỳ Deadly mới khi đã đủ thời gian lặp
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_DEADLY_INTERVAL_MS) {
-            ctx.timers.battery_warn_last_ts = now;     // Bắt đầu chu kỳ mới
+    if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_DEADLY) {
+        if (time_since_last_warn >= DE_INDICATOR_BATTERY_DEADLY_REMIND_INTERVAL_MS) {
+            ctx.timers.battery_warn_last_ts = now;
             return DE_INDICATOR_STATE_BATTERY_DEADLY;
         }
-        // Nếu đang trong chu kỳ Deadly thì giữ state
         else if (ctx.state == DE_INDICATOR_STATE_BATTERY_DEADLY) {
             return DE_INDICATOR_STATE_BATTERY_DEADLY;
         }
     }
-    else if (ctx.data.battery_percent <= 10) {
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_CRITICAL_INTERVAL_MS) {
+    else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_CRITICAL) {
+        if (time_since_last_warn >= DE_INDICATOR_BATTERY_CRITICAL_REMIND_INTERVAL_MS) {
             ctx.timers.battery_warn_last_ts = now;
             return DE_INDICATOR_STATE_BATTERY_CRITICAL;
         }
@@ -431,8 +452,8 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
             return DE_INDICATOR_STATE_BATTERY_CRITICAL;
         }
     }
-    else if (ctx.data.battery_percent <= 30) {
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_LOW_INTERVAL_MS) {
+    else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_LOW) {
+        if (time_since_last_warn >= DE_INDICATOR_BATTERY_LOW_REMIND_INTERVAL_MS) {
             ctx.timers.battery_warn_last_ts = now;
             return DE_INDICATOR_STATE_BATTERY_LOW;
         }
@@ -467,69 +488,57 @@ static de_indicator_state_t resolve_state(int64_t now) {
 
 static void render_battery_check(int64_t now) {
     uint8_t battery_percent = ctx.data.battery_percent;
-    int64_t battery_check_start_ts_time = ctx.timers.battery_check_start_ts;
-    switch (battery_percent) {
-        case 0 ... 10:
-            led_flash_window(LED_RED, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
-            break;
-        case 11 ... 50:
-            led_flash_window(LED_YELLOW, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
-            break;
-        case 51 ... 100:
-            led_flash_window(LED_GREEN, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
-            break;
-        default:
-            led_flash_window(LED_MAGENTA, now, battery_check_start_ts_time, DE_INDICATOR_BATTERY_CHECK_MS);
-            break;
+    int64_t start = ctx.timers.battery_check_start_ts;
+
+    // 10
+    if (battery_percent <= DE_INDICATOR_BATTERY_DEADLY) {
+        led_blink_duration(LED_RED, now, start, DE_INDICATOR_BATTERY_FLASH_PERIOD_DEADLY_MS, DE_INDICATOR_BATTERY_CHECK_MS);
+
+    // 20
+    } else if (battery_percent <= DE_INDICATOR_BATTERY_CRITICAL) {
+        led_flash_window(LED_RED, now, start, DE_INDICATOR_BATTERY_CHECK_MS);
+
+    // 30
+    } else if (battery_percent <= DE_INDICATOR_BATTERY_LOW) {
+        led_flash_window(LED_YELLOW, now, start, DE_INDICATOR_BATTERY_CHECK_MS);
+
+    // 50
+    } else if (battery_percent <= 50) {
+        led_flash_n(LED_GREEN, now, start, 2);
+
+    // 50-100 
+    } else if (battery_percent > 50 && battery_percent <= 100) {
+        led_flash_window(LED_GREEN, now, start, DE_INDICATOR_BATTERY_CHECK_MS);
+
+    // Can not read percent
+    } else {
+        led_flash_window(LED_MAGENTA, now, start, DE_INDICATOR_BATTERY_CHECK_MS);
     }
 }
 
 static void render_battery_warning(int64_t now, de_indicator_state_t state) {
-    int64_t start_time = ctx.timers.battery_warn_last_ts;
-    int64_t elapsed = now - start_time;
+    int64_t start = ctx.timers.battery_warn_last_ts;
 
-    uint32_t flash_duration_ms = 0;
-    uint32_t full_period_ms = 0;        // Chu kỳ đầy đủ (on + off)
-    uint8_t  color = LED_RED;
-
-    // Chọn thông số theo state
     switch (state) {
-        case DE_INDICATOR_STATE_BATTERY_LOW:
-            flash_duration_ms = DE_INDICATOR_BATTERY_LOW_DURATION_MS;      // 10000
-            full_period_ms    = DE_INDICATOR_BATTERY_FLASH_PERIOD_LOW_MS;  // 800
-            color = LED_YELLOW;
-            break;
 
-        case DE_INDICATOR_STATE_BATTERY_CRITICAL:
-            flash_duration_ms = DE_INDICATOR_BATTERY_CRITICAL_DURATION_MS; // 10000
-            full_period_ms    = DE_INDICATOR_BATTERY_FLASH_PERIOD_CRITICAL_MS; // 400
-            color = LED_RED;
-            break;
-
+        // baterry <= 10% 
         case DE_INDICATOR_STATE_BATTERY_DEADLY:
-            flash_duration_ms = DE_INDICATOR_BATTERY_DEADLY_DURATION_MS;   // liên tục
-            full_period_ms    = DE_INDICATOR_BATTERY_FLASH_PERIOD_DEADLY_MS; // 200
-            color = LED_RED;
+            led_blink_duration(LED_RED, now, start, DE_INDICATOR_BATTERY_FLASH_PERIOD_DEADLY_MS, DE_INDICATOR_BATTERY_DEADLY_DURATION_MS);
+            break;
+
+        // battery <= 20%
+        case DE_INDICATOR_STATE_BATTERY_CRITICAL:
+            led_blink_duration(LED_RED, now, start, DE_INDICATOR_BATTERY_FLASH_PERIOD_CRITICAL_MS, DE_INDICATOR_BATTERY_CRITICAL_DURATION_MS);
+            break;
+
+        // battery <= 30%,
+        case DE_INDICATOR_STATE_BATTERY_LOW:
+            led_blink_duration(LED_YELLOW, now, start, DE_INDICATOR_BATTERY_FLASH_PERIOD_LOW_MS, DE_INDICATOR_BATTERY_LOW_DURATION_MS);
             break;
 
         default:
             led_off_all();
-            return;
-    }
-
-    // Nếu là Deadly hoặc chưa hết thời gian flash 10 giây
-    if (flash_duration_ms > 0 && elapsed >= flash_duration_ms) {
-        led_off_all();
-        return;
-    }
-
-    // Cách tính ổn định và chính xác hơn
-    uint32_t position_in_cycle = (uint32_t)(elapsed % full_period_ms);
-
-    if (position_in_cycle < (full_period_ms / 2)) {
-        led_set(color);        // Pha sáng (nửa đầu chu kỳ)
-    } else {
-        led_off_all();         // Pha tắt (nửa sau chu kỳ)
+            break;
     }
 }
 
@@ -547,12 +556,15 @@ static void render_indicator_state(de_indicator_state_t state, int64_t now) {
         break;
 
     case DE_INDICATOR_STATE_OUTPUT_CHECK:
-        if (ctx.data.is_usb_output) led_flash_window(LED_WHITE, now, ctx.timers.output_check_start_ts, DE_INDICATOR_OUTPUT_CHECK_MS);
-        else led_flash_n(LED_BLUE, now, ctx.timers.output_check_start_ts, ctx.data.ble_profile_index + 1);
+        if (ctx.data.is_usb_output) {
+            led_flash_window(LED_WHITE, now, ctx.timers.output_check_start_ts, 1000);
+        } else {
+            led_flash_n(LED_BLUE, now, ctx.timers.output_check_start_ts, ctx.data.ble_profile_index + 1);
+        }
         break;
     
     case DE_INDICATOR_STATE_OUTPUT_USB:
-        led_flash_window(LED_WHITE, now, ctx.timers.output_usb_start_ts, DE_INDICATOR_OUTPUT_CHECK_MS);
+        led_flash_window(LED_WHITE, now, ctx.timers.output_usb_start_ts, 1000);
         break;
 
     case DE_INDICATOR_STATE_BATTERY_CHECK:
@@ -583,7 +595,7 @@ static void render_indicator_state(de_indicator_state_t state, int64_t now) {
         led_flash_window(LED_BLUE, now, ctx.timers.ble_connected_start_ts, DE_INDICATOR_BLE_CONNECTED_TIMEOUT_MS);
         break;
 
-    // case DE_INDICATOR_STATE_BATTERY_DEADLY:
+    case DE_INDICATOR_STATE_BATTERY_DEADLY:
     case DE_INDICATOR_STATE_BATTERY_LOW:
     case DE_INDICATOR_STATE_BATTERY_CRITICAL:
         render_battery_warning(now, state);
@@ -892,6 +904,7 @@ static int de_indicator_endpoint_changed_listener(const zmk_event_t *eh) {
             !ble_recent_activity;
 
         if (no_ble_activity && !ctx.flags.evt_output_check) {
+            // Indicate BLE profile
             de_indicator_trigger_output_check(false);
         }
     }

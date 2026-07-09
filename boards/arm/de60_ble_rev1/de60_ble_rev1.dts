@@ -25,7 +25,15 @@
         zephyr,flash = &flash0;
         zmk,kscan = &kscan0;
         zmk,underglow = &led_strip;
-        zmk,battery = &fuelgauge;
+        // zmk,battery = &fuelgauge;
+        zmk,battery = &vbatt;
+    };
+
+    vbatt: vbatt {
+        compatible = "zmk,battery-voltage-divider";
+        io-channels = <&adc 0>; // P0.02 (AIN0)
+        output-ohms = <2000000>;
+        full-ohms = <(1000000 + 2000000)>;
     };
 
     kscan0: kscan {
@@ -119,6 +127,10 @@
         control-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
     };
 
+};
+
+&adc {
+    status = "okay";
 };
 
 &gpiote {
