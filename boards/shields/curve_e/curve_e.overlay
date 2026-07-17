@@ -1,0 +1,298 @@
+/*
+* Copyright (c) 2021 The ZMK Contributors
+*
+* SPDX-License-Identifier: MIT
+*/
+
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/led/led.h>
+#include <physical_layouts.dtsi>
+
+/ {
+	model = "CURVE_E";
+	compatible = "dekb,curve_e";
+
+	chosen {
+		zmk,battery = &vbatt;
+		zmk,kscan = &kscan0;
+        zmk,underglow = &led_strip;
+		zmk,physical-layout = <&space_1u>;
+	};
+
+	sensors {
+		compatible = "zmk,keymap-sensors";
+		sensors = <&right_encoder>;
+	};
+
+	
+	space_1u_matrix_transform: space_1u_matrix_transform {
+		compatible = "zmk,matrix-transform";
+		columns = <13>;
+		rows = <4>;
+		map = <
+			RC(0,0) RC(0,1) RC(0,2) RC(0,3) RC(0,4) RC(0,5) RC(0,6) RC(0,7) RC(0,8) RC(0,9) RC(0,10) RC(0,11) RC(0,12)  
+			RC(1,0) RC(1,1) RC(1,2) RC(1,3) RC(1,4) RC(1,5) RC(1,6) RC(1,7) RC(1,8) RC(1,9) RC(1,10)		  RC(1,12) 
+			RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4) RC(2,5) RC(2,6) RC(2,7) RC(2,8) RC(2,9) RC(2,10) RC(2,11) RC(2,12)  
+			RC(3,0) 		RC(3,2) RC(3,3) RC(3,4) RC(3,5) 		RC(3,7) RC(3,8) RC(3,9) 				  RC(3,12)
+		>;
+	};
+
+    space_1u: space_1u {
+        compatible = "zmk,physical-layout";
+        display-name = "LEFT SPACE 1U";
+        transform = <&space_1u_matrix_transform>;
+
+        keys  //                     w   h    x    y     rot    rx    ry
+            = <&key_physical_attrs 100 100    0    0       0     0     0>
+            , <&key_physical_attrs 100 100  109 (-7)     150 (-126) (-212)>
+            , <&key_physical_attrs 100 100  231 (-34)     563 (-126) (-212)>
+            , <&key_physical_attrs 100 100  344 (-55)     838 (-126) (-212)>
+            , <&key_physical_attrs 100 100  453 (-75)    1050 (-126) (-212)>
+            , <&key_physical_attrs 100 100  559 (-94)    1213 (-126) (-212)>
+            , <&key_physical_attrs 100 100  607  258 (-1300) (-126) (-212)>
+            , <&key_physical_attrs 100 100  716  246 (-1212) (-126) (-212)>
+            , <&key_physical_attrs 100 100  832  220 (-1050) (-126) (-212)>
+            , <&key_physical_attrs 100 100  951  182  (-837) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1072  126  (-562) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1205   10   (-50) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1307    0       0     0     0>
+            , <&key_physical_attrs 125 100 (-10)  100       0     0     0>
+            , <&key_physical_attrs 100 100  139   84     335 (-126) (-212)>
+            , <&key_physical_attrs 100 100  259   61     650 (-126) (-212)>
+            , <&key_physical_attrs 100 100  374   41     900 (-126) (-212)>
+            , <&key_physical_attrs 100 100  486   20    1100 (-126) (-212)>
+            , <&key_physical_attrs 100 100  596    1    1250 (-126) (-212)>
+            , <&key_physical_attrs 100 100  641  353 (-1250) (-126) (-212)>
+            , <&key_physical_attrs 100 100  759  330 (-1100) (-126) (-212)>
+            , <&key_physical_attrs 100 100  882  295  (-900) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1007  246  (-650) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1134  177  (-335) (-126) (-212)>
+            , <&key_physical_attrs 175 100 1260  100       0     0     0>
+            , <&key_physical_attrs 175 100 (-29)  200       0     0     0>
+            , <&key_physical_attrs 100 100  189  174     500 (-126) (-212)>
+            , <&key_physical_attrs 100 100  314  151     800 (-126) (-212)>
+            , <&key_physical_attrs 100 100  431  131    1000 (-126) (-212)>
+            , <&key_physical_attrs 100 100  545  108    1200 (-126) (-212)>
+            , <&key_physical_attrs 100 100  653   93    1310 (-126) (-212)>
+            , <&key_physical_attrs 100 100  586  460 (-1300) (-126) (-212)>
+            , <&key_physical_attrs 100 100  699  446 (-1200) (-126) (-212)>
+            , <&key_physical_attrs 100 100  824  414 (-1000) (-126) (-212)>
+            , <&key_physical_attrs 100 100  950  377  (-800) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1084  316  (-500) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1232  200       0     0     0>
+            , <&key_physical_attrs 125 100 1332  200       0     0     0>
+            , <&key_physical_attrs 125 100 (-10)  300       0     0     0>
+            , <&key_physical_attrs 100 100  296  265     650 (-126) (-212)>
+            , <&key_physical_attrs 100 100  419  243     900 (-126) (-212)>
+            , <&key_physical_attrs 100 100  546  208    1200 (-126) (-212)>
+            , <&key_physical_attrs 100 100  646  208    1200 (-126) (-212)>
+            , <&key_physical_attrs 225 100  601  548 (-1200) (-126) (-212)>
+            , <&key_physical_attrs 100 100  870  497  (-900) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1004  448  (-650) (-126) (-212)>
+            , <&key_physical_attrs 125 100 1279  300       0     0     0>
+            ;
+    };
+
+    space_2u_matrix_transform: space_2u_matrix_transform {
+		compatible = "zmk,matrix-transform";
+		columns = <13>;
+		rows = <4>;
+		map = <
+			RC(0,0) RC(0,1) RC(0,2) RC(0,3) RC(0,4) RC(0,5) RC(0,6) RC(0,7) RC(0,8) RC(0,9) RC(0,10) RC(0,11) RC(0,12)  
+			RC(1,0) RC(1,1) RC(1,2) RC(1,3) RC(1,4) RC(1,5) RC(1,6) RC(1,7) RC(1,8) RC(1,9) RC(1,10)		  RC(1,12) 
+			RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4) RC(2,5) RC(2,6) RC(2,7) RC(2,8) RC(2,9) RC(2,10) RC(2,11) RC(2,12)  
+			RC(3,0) 		RC(3,2) RC(3,3)         RC(3,5) 		RC(3,7) RC(3,8) RC(3,9) 				  RC(3,12)
+		>;
+	};
+
+    space_2u: space_2u {
+        compatible = "zmk,physical-layout";
+        display-name = "LEFT SPACE 2U";
+        transform = <&space_2u_matrix_transform>;
+
+        keys  //                     w   h    x    y     rot    rx    ry
+            = <&key_physical_attrs 100 100    0    0       0     0     0>
+            , <&key_physical_attrs 100 100  109 (-7)     150 (-126) (-212)>
+            , <&key_physical_attrs 100 100  231 (-34)     563 (-126) (-212)>
+            , <&key_physical_attrs 100 100  344 (-55)     838 (-126) (-212)>
+            , <&key_physical_attrs 100 100  453 (-75)    1050 (-126) (-212)>
+            , <&key_physical_attrs 100 100  559 (-94)    1213 (-126) (-212)>
+            , <&key_physical_attrs 100 100  607  258 (-1300) (-126) (-212)>
+            , <&key_physical_attrs 100 100  716  246 (-1212) (-126) (-212)>
+            , <&key_physical_attrs 100 100  832  220 (-1050) (-126) (-212)>
+            , <&key_physical_attrs 100 100  951  182  (-837) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1072  126  (-562) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1205   10   (-50) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1307    0       0     0     0>
+            , <&key_physical_attrs 125 100 (-10)  100       0     0     0>
+            , <&key_physical_attrs 100 100  139   84     335 (-126) (-212)>
+            , <&key_physical_attrs 100 100  259   61     650 (-126) (-212)>
+            , <&key_physical_attrs 100 100  374   41     900 (-126) (-212)>
+            , <&key_physical_attrs 100 100  486   20    1100 (-126) (-212)>
+            , <&key_physical_attrs 100 100  596    1    1250 (-126) (-212)>
+            , <&key_physical_attrs 100 100  641  353 (-1250) (-126) (-212)>
+            , <&key_physical_attrs 100 100  759  330 (-1100) (-126) (-212)>
+            , <&key_physical_attrs 100 100  882  295  (-900) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1007  246  (-650) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1134  177  (-335) (-126) (-212)>
+            , <&key_physical_attrs 175 100 1260  100       0     0     0>
+            , <&key_physical_attrs 175 100 (-29)  200       0     0     0>
+            , <&key_physical_attrs 100 100  189  174     500 (-126) (-212)>
+            , <&key_physical_attrs 100 100  314  151     800 (-126) (-212)>
+            , <&key_physical_attrs 100 100  431  131    1000 (-126) (-212)>
+            , <&key_physical_attrs 100 100  545  108    1200 (-126) (-212)>
+            , <&key_physical_attrs 100 100  653   93    1310 (-126) (-212)>
+            , <&key_physical_attrs 100 100  586  460 (-1300) (-126) (-212)>
+            , <&key_physical_attrs 100 100  699  446 (-1200) (-126) (-212)>
+            , <&key_physical_attrs 100 100  824  414 (-1000) (-126) (-212)>
+            , <&key_physical_attrs 100 100  950  377  (-800) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1084  316  (-500) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1232  200       0     0     0>
+            , <&key_physical_attrs 125 100 1332  200       0     0     0>
+            , <&key_physical_attrs 125 100 (-10)  300       0     0     0>
+            , <&key_physical_attrs 100 100  296  265     650 (-126) (-212)>
+            , <&key_physical_attrs 100 100  419  243     900 (-126) (-212)>
+            , <&key_physical_attrs 200 100  546  208    1200 (-126) (-212)>
+            , <&key_physical_attrs 225 100  601  548 (-1200) (-126) (-212)>
+            , <&key_physical_attrs 100 100  870  497  (-900) (-126) (-212)>
+            , <&key_physical_attrs 100 100 1004  448  (-650) (-126) (-212)>
+            , <&key_physical_attrs 125 100 1279  300       0     0     0>
+            ;
+    };
+
+    position_map {
+        compatible = "zmk,physical-layout-position-map";
+
+        space_2u {
+            physical-layout = <&space_2u>;
+            positions = <41>;
+        };
+
+        space_1u {
+            physical-layout = <&space_1u>;
+            positions = <42>;
+        };
+    };
+
+	kscan0: kscan_0 {
+		compatible = "zmk,kscan-gpio-matrix";
+		diode-direction = "col2row";
+        wakeup-source;
+
+		col-gpios
+			= <&gpio0 28 GPIO_ACTIVE_HIGH>
+			, <&gpio0 2  GPIO_ACTIVE_HIGH>
+			, <&gpio0 29 GPIO_ACTIVE_HIGH>
+			, <&gpio0 31 GPIO_ACTIVE_HIGH>
+			, <&gpio0 30 GPIO_ACTIVE_HIGH>
+			, <&gpio0 26 GPIO_ACTIVE_HIGH>
+			, <&gpio0 17 GPIO_ACTIVE_HIGH>
+			, <&gpio0 20 GPIO_ACTIVE_HIGH>
+			, <&gpio0 22 GPIO_ACTIVE_HIGH>
+			, <&gpio1 0  GPIO_ACTIVE_HIGH>
+			, <&gpio1 2  GPIO_ACTIVE_HIGH>
+			, <&gpio1 4  GPIO_ACTIVE_HIGH>
+			, <&gpio1 6  GPIO_ACTIVE_HIGH>
+			;
+
+		row-gpios
+			= <&gpio0 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+			, <&gpio0 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+			, <&gpio0 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+			, <&gpio0 7  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+			;
+	};
+
+    aliases {
+        indicator-b = &led0;
+        indicator-w = &led1;
+    };
+
+    leds {
+        compatible = "gpio-leds";
+        status = "okay";
+        led0: led_0 { gpios = <&gpio0  3 GPIO_ACTIVE_HIGH>; }; // blue
+        led1: led_1 { gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>; }; // white 
+    };
+
+    right_encoder: encoder_right {
+        compatible = "alps,ec11";
+        a-gpios = <&gpio0 24 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 13  (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        resolution = <4>;
+		status = "okay";
+    };
+
+	vbatt: vbatt {
+		compatible = "zmk,battery-voltage-divider";
+		io-channels = <&adc 2>;
+		output-ohms = <2000000>;
+		full-ohms = <(2000000 + 820000)>;
+	};
+
+    ext-power {
+        compatible = "zmk,ext-power-generic";
+        label = "EXT_POWER";
+        control-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
+    };
+
+    /* --- Wakeup after Soft-off using key D --- */
+    keys {
+        compatible = "gpio-keys";
+        soft_off_gpio_key: soft_off_gpio_key {
+            gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // row1
+        };
+    };
+
+    wakeup_scan: wakeup_scan {
+        compatible = "zmk,gpio-key-wakeup-trigger";
+        trigger = <&soft_off_gpio_key>;
+        wakeup-source;
+        
+        extra-gpios = <&gpio0 31  GPIO_ACTIVE_HIGH>; // col3
+    };
+
+    soft_off_wakers {
+        compatible = "zmk,soft-off-wakeup-sources";
+        wakeup-sources = <&wakeup_scan>;
+    };
+};
+
+&spi3 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+
+        /* SPI */
+        reg = <0>; /* ignored, but necessary for SPI bindings */
+        spi-max-frequency = <4000000>;
+
+        /* WS2812 */
+        chain-length = <10>; /* arbitrary; change at will */
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
+    };
+};
+
+&pinctrl {
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 15)>;
+        };
+    };
+
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 15)>;
+            low-power-enable;
+        };
+    };
+};

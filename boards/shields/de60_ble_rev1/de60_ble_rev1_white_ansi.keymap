@@ -1,0 +1,6 @@
+/*
+ * Copyright (c) 2026 DEKB
+ * SPDX-License-Identifier: MIT
+ */
+
+#include "de60_ble_rev1.keymap"

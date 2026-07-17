@@ -1,0 +1,10 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+# all use the same settings. remove #if
+
+config ZMK_KEYBOARD_NAME
+    default "de60_ble_rev1"
+
+config LED
+    default y

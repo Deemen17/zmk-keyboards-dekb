@@ -8,16 +8,13 @@
 #include <nordic/nrf52840_qiaa.dtsi>
 
 / {
-    model = "de_nrf52840";
-    compatible = "dekb,de_nrf52840";
+    model = "de_core_nrf52";
+    compatible = "dekb,de_core_nrf52";
 
     chosen {
         zephyr,code-partition = &code_partition;
         zephyr,sram = &sram0;
         zephyr,flash = &flash0;
-        zephyr,console = &snippet_studio_rpc_usb_uart;
-        zephyr,uart-mcumgr = &snippet_studio_rpc_usb_uart;
-        zephyr,shell-uart = &snippet_studio_rpc_usb_uart;
     };
 
 };

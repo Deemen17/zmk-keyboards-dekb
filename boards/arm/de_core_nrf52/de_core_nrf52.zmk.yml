@@ -1,0 +1,13 @@
+file_format: "1"
+id: de_core_nrf52
+name: DE Core nRF52 Keyboard
+type: board
+arch: arm
+features:
+  - keys
+  - underglow
+  - studio
+outputs:
+  - usb
+  - ble
+url: https://github.com/Deemen17/

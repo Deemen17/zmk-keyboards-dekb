@@ -1,5 +1,5 @@
-identifier: de_nrf52840
-name: DE nRF52840 Keyboard
+identifier: de_core_nrf52
+name: DE Core nRF52 Keyboard
 type: mcu
 arch: arm
 toolchain:

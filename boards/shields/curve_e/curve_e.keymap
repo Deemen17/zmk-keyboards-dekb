@@ -1,0 +1,59 @@
+/*
+# Copyright (c) 2021 The ZMK Contributors
+*
+* SPDX-License-Identifier: MIT
+*/
+
+#include "common.keymap"
+
+#define NUM 1
+#define SYM 2
+#define SET 3
+
+
+/ {
+
+	keymap {
+		compatible = "zmk,keymap";
+
+		default_layer {
+			bindings = <
+    &kp ESC   &kp Q     &kp W     &kp E     &kp R     &kp T     &kp Y     &kp U     &kp I     &kp O     &kp P     &kp BSPC  &kp DEL
+    &kp TAB   &kp A     &kp S     &kp D     &kp F     &kp G     &kp H     &kp J     &kp K     &kp L     &kp SEMI            &kp ENTER   
+    &kp LSHFT &kp Z     &kp X     &kp C     &kp V     &kp B     &kp B     &kp N     &kp M     &kp COMMA &kp DOT   &kp FSLH  &kp RSHFT
+    &kp LCTRL    	    &kp LALT  &mo NUM   &kp SPACE &kp SPACE &kp SPACE           &mo SYM   &kp RGUI            &mo SET
+			>;
+            sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP>;
+		};
+
+		layer_numbers {
+			bindings = <
+    &kp GRAVE &kp N1    &kp N2    &kp N3    &kp N4    &kp N5    &kp N6    &kp N7    &kp N8    &kp N9    &kp N0    &kp MINUS &kp EQUAL
+    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans     	        &trans   
+    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans	&trans
+    &trans    		    &trans    &trans    &trans    &trans    &trans              &trans    &trans              &trans
+			>;
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+		};
+
+		layer_symbols {
+			bindings = <
+    &kp TILDE &kp EXCL  &kp AT    &kp HASH  &kp DLLR  &kp PRCNT &kp CARET &kp AMPS  &kp STAR  &kp LPAR  &kp RPAR  &kp UNDER &kp PLUS
+    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans     	        &trans   
+    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans	&trans
+    &trans    		    &trans    &trans    &trans    &trans    &trans              &trans    &trans              &trans
+			>;
+            sensor-bindings = <&inc_dec_kp C_BRI_DN C_BRI_UP>;
+		};
+
+		layer_settings {
+			bindings = <
+    &DE_USB   &DE_BT1   &DE_BT2   &DE_BT3   &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &DE_BLD  
+    &DE_BAT   &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans     	        &trans   
+    &DE_SLP   &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans	&trans
+    &DE_OUT    		    &trans    &trans    &trans    &trans    &trans              &trans    &trans              &trans
+			>;
+            sensor-bindings = <&inc_dec_kp C_BRI_DN C_BRI_UP>;
+		};
+	};
+};

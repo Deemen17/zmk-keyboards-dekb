@@ -1,0 +1,6 @@
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+config SHIELD_CURVE_E
+    def_bool $(shields_list_contains,curve_e_ble)
+    select SPI

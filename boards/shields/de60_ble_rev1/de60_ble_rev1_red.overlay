@@ -1,0 +1,131 @@
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <physical_layouts.dtsi>
+#include "common.overlay"
+
+#define RED_MAP_UPPER   UPPER_MAP
+#define RED_LAYOUT_UPPER UPPER_LAYOUT
+
+/ {
+
+    chosen {
+        zmk,battery = &fuelgauge;
+        // zmk,battery = &vbatt;
+    };
+
+    // Space 7U
+    red_ansi_7u_wk_transform: red_ansi_7u_wk_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+            RC(8,0) RC(9,0) RC(8,1)                         RC(9,3)                                 RC(8,5) RC(9,6) RC(8,6) 
+        >;
+    };
+
+    layout_red_space_7u_wk: layout_red_space_7u_wk {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 7U WK";
+        transform = <&red_ansi_7u_wk_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_7U_WK;
+    };
+
+    red_ansi_7u_wkl_transform: red_ansi_7u_wkl_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+            RC(8,0)         RC(8,1)                         RC(9,3)                                 RC(8,5)         RC(8,6) 
+        >;
+    };
+
+    layout_red_space_7u_wkl: layout_red_space_7u_wkl {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 7U WKL";
+        transform = <&red_ansi_7u_wkl_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_7U_WKL;
+    };
+
+    red_ansi_7u_hhkb_transform: red_ansi_7u_hhkb_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+                    RC(9,0) RC(8,1)                         RC(9,3)                                 RC(8,5) RC(9,6) 
+        >;
+    };
+
+    layout_red_space_7u_hhkb: layout_red_space_7u_hhkb {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 7U HHKB";
+        transform = <&red_ansi_7u_hhkb_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_7U_HHKB;
+    };
+
+    // Space 10U
+    red_ansi_10u_wk_transform: red_ansi_10u_wk_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+            RC(8,0) RC(9,0)                                  RC(9,3)                                        RC(9,6) RC(8,6) 
+        >;
+    };
+
+    layout_red_space_10u_wk: layout_red_space_10u_wk {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 10U WK";
+        transform = <&red_ansi_10u_wk_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_10U_WK;
+    };
+
+    red_ansi_10u_wkl_transform: red_ansi_10u_wkl_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+            RC(8,0)                                          RC(9,3)                                                RC(8,6) 
+        >;
+    };
+
+    layout_red_space_10u_wkl: layout_red_space_10u_wkl {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 10U WKL";
+        transform = <&red_ansi_10u_wkl_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_10U_WKL;
+    };
+
+    red_ansi_10u_hhkb_transform: red_ansi_10u_hhkb_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            RED_MAP_UPPER
+                    RC(9,0)                                  RC(9,3)                                        RC(9,6) 
+        >;
+    };
+
+    layout_red_space_10u_hhkb: layout_red_space_10u_hhkb {
+        compatible = "zmk,physical-layout";
+        display-name = "RED 10U HHKB";
+        transform = <&red_ansi_10u_hhkb_transform>;
+
+        keys =  RED_LAYOUT_UPPER
+                , SPC_10U_HHKB;
+    };
+
+};

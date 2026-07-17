@@ -1,0 +1,1 @@
+target_sources(app PRIVATE curve_e_indicator.c)

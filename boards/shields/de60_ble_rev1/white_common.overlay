@@ -1,0 +1,74 @@
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <physical_layouts.dtsi>
+#include "common.overlay"
+
+#define WHITE_MAP_R0_BS_1U  RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) RC(0,5) RC(1,5) RC(0,6) RC(1,6) RC(5,6) 
+#define WHITE_MAP_R0_BS_2U  RC(0,0) RC(1,0) RC(0,1) RC(1,1) RC(0,2) RC(1,2) RC(0,3) RC(1,3) RC(0,4) RC(1,4) RC(0,5) RC(1,5) RC(0,6) RC(1,6) 
+
+#define WHITE_MAP_R1        RC(2,0) RC(3,0) RC(2,1) RC(3,1) RC(2,2) RC(3,2) RC(2,3) RC(3,3) RC(2,4) RC(3,4) RC(2,5) RC(3,5) RC(2,6) RC(3,6) 
+
+#define WHITE_MAP_R2        RC(4,0) RC(5,0) RC(4,1) RC(5,1) RC(4,2) RC(5,2) RC(4,3) RC(5,3) RC(4,4) RC(5,4) RC(4,5) RC(5,5)         RC(4,6) 
+
+#define WHITE_MAP_R3_ISO_L  RC(6,0) RC(7,0) RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5)
+#define WHITE_MAP_R3_ANSI_L RC(6,0)         RC(6,1) RC(7,1) RC(6,2) RC(7,2) RC(6,3) RC(7,3) RC(6,4) RC(7,4) RC(6,5) RC(7,5)
+
+#define WHITE_MAP_R3_R      RC(6,6) RC(7,6) 
+#define WHITE_MAP_R3_R_275U RC(6,6) 
+
+#define WHITE_MAP_R4_ALL_L  RC(8,0) RC(9,0) RC(8,1)                         RC(9,3)       
+#define WHITE_MAP_R4_HHKB_L         RC(9,0) RC(8,1)                         RC(9,3)       
+#define WHITE_MAP_R4_WKL_L  RC(8,0)         RC(8,1)                         RC(9,3)     
+
+#define WHITE_MAP_R4_10U_wK_L RC(8,0) RC(9,0)                                 RC(9,3)       
+#define WHITE_MAP_R4_10U_wKL_L RC(8,0)                                        RC(9,3)       
+
+// Space 625u arrow
+#define WHITE_MAP_R4_625U_A RC(8,4) RC(9,5) RC(8,5) RC(9,6) RC(8,6) 
+// Space 625u universal
+#define WHITE_MAP_R4_625U_U RC(8,4) RC(9,5)         RC(9,6) RC(8,6) 
+// Space 625u hhkb
+#define WHITE_MAP_R4_625U_H RC(8,4) RC(9,5) RC(8,5) RC(9,6) 
+
+#define WHITE_MAP_R4_7U_WK          RC(9,5)         RC(9,6) RC(8,6) 
+#define WHITE_MAP_R4_7U_WKL         RC(9,5)                 RC(8,6) 
+#define WHITE_MAP_R4_7U_HHKB        RC(9,5)         RC(9,6) 
+#define WHITE_MAP_R4_7U_ARROW       RC(9,5) RC(8,5) RC(9,6) RC(8,6) 
+
+#define WHITE_MAP_R4_10U_WK_R                       RC(9,6) RC(8,6) 
+#define WHITE_MAP_R4_10U_WKL_R                              RC(8,6) 
+
+
+// Round 0
+#define WHITE_LAYOUT_R0_BS_1U       ROW0_FIXED , ROW0_BS_1U 
+#define WHITE_LAYOUT_R0_BS_2U       ROW0_FIXED , ROW0_BS_2U 
+
+// Round 1
+#define WHITE_LAYOUT_R1_ANSI        , ROW1_FIXED , ROW1_ANSI  
+#define WHITE_LAYOUT_R1_ISO         , ROW1_FIXED , ROW1_ISO  
+
+// Round 2
+#define WHITE_LAYOUT_R2_ANSI        , ROW2_FIXED , ROW2_ANSI  
+#define WHITE_LAYOUT_R2_ISO         , ROW2_FIXED , ROW2_ISO
+
+// Round 3
+#define WHITE_LAYOUT_R3_ANSI_175U   , ROW3_ANSI  , ROW3_FIXED , ROW3_RSFT_175U
+#define WHITE_LAYOUT_R3_ANSI_275U   , ROW3_ANSI  , ROW3_FIXED , ROW3_RSFT_275U
+#define WHITE_LAYOUT_R3_ANSI_ARROW  , ROW3_ANSI  , ROW3_FIXED , ROW3_RSFT_ARROW
+
+#define WHITE_LAYOUT_R3_ISO_175U    , ROW3_ISO  , ROW3_FIXED , ROW3_RSFT_175U
+#define WHITE_LAYOUT_R3_ISO_275U    , ROW3_ISO  , ROW3_FIXED , ROW3_RSFT_275U
+#define WHITE_LAYOUT_R3_ISO_ARROW   , ROW3_ISO  , ROW3_FIXED , ROW3_RSFT_ARROW
+
+// Round 4
+#define WHITE_LAYOUT_R4_625U_U      , SPC_625U_UNI
+#define WHITE_LAYOUT_R4_625U_A      , SPC_625U_ARROW
+#define WHITE_LAYOUT_R4_625U_H      , SPC_625U_HHKB
+
+#define WHITE_LAYOUT_R4_7U_WK       , SPC_7U_WK
+#define WHITE_LAYOUT_R4_7U_WKL      , SPC_7U_WKL
+#define WHITE_LAYOUT_R4_7U_HHKB     , SPC_7U_HHKB
+#define WHITE_LAYOUT_R4_7U_ARROW    , SPC_7U_ARROW
+
+#define WHITE_LAYOUT_R4_10U_WK      , SPC_10U_WK
+#define WHITE_LAYOUT_R4_10U_WKL     , SPC_10U_WKL
+#define WHITE_LAYOUT_R4_10U_HHKB    , SPC_10U_HHKB

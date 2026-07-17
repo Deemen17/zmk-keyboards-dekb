@@ -1,9 +1,9 @@
 # Copyright (c) 2026 DEKB
 
-if BOARD_DE_NRF52840
+if BOARD_DE_CORE_NRF52
 
 config BOARD
-    default "de_nrf52840"
+    default "de_core_nrf52"
 
 if USB_DEVICE_STACK
 
