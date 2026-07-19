@@ -1,6 +1,6 @@
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <physical_layouts.dtsi>
-#include "white_common.overlay"
+#include "common.overlay"
 
 #define WHITE_MAP_UPPER_ANSI UPPER_MAP
 #define WHITE_LAYOUT_UPPER_ANSI UPPER_LAYOUT

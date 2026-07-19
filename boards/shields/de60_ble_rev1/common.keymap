@@ -49,6 +49,17 @@
 #define UGEFR rgb_ug RGB_EFR
 #define UGEFF rgb_ug RGB_EFF
 
+#define CLFN2 lt 2 caps_word
+
+&caps_word {
+    continue-list = <
+        UNDERSCORE 
+        MINUS 
+        BACKSPACE 
+        DELETE
+    >;
+};
+
 / {
     behaviors {
 
@@ -59,11 +70,18 @@
             bindings = <&kp D &kp E &kp K &kp B &kp LCTRL &kp LALT &kp LSHIFT &kp LGUI &kp RCTRL &kp RALT &kp RSHIFT &kp RGUI>;
         };
 
-        zmk_studio_web: zmk_studio_web {
+        open_zmks: open_zmks {
             compatible = "zmk,behavior-macro";
+            label = "OPEN_ZMKS_LINK";
             #binding-cells = <0>;
-            display-name = "# ZMK Studio Web";
-            bindings = <>;
+            tap-ms = <10>;  
+            wait-ms = <10>;  
+            bindings
+                = <&macro_tap &kp H &kp T &kp T &kp P &kp S &kp COLON &kp FSLH &kp FSLH> // https://
+                , <&macro_tap &kp Z &kp M &kp K &kp S &kp DOT>                            // zmks.
+                , <&macro_tap &kp P &kp H &kp D &kp E &kp S &kp I &kp G &kp N &kp DOT>    // phdesign.
+                , <&macro_tap &kp C &kp C &kp ENTER>                                      // cc + Enter để chạy luôn
+                ;
         };
 
         de_battery: de_battery {
