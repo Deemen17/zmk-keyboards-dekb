@@ -1,13 +1,35 @@
 # ZMK build matrix for DEKB firmware.
 # All default targets use the shared DEKB nRF52840 core and board-specific shields.
+#
+# board: [ "de_core_nrf52" ]
+# shield: [ "de60_ble_rev1_red", "de60_ble_rev1_white_ansi_7u" ]
+# include:
+#   - board: de_core_nrf52
+#     shield: de60_ble_rev1_red
+#
+---
 include:
   - board: de_core_nrf52
     shield: de60_ble_rev1_red
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de60_ble_rev1_red
+
   - board: de_core_nrf52
     shield: de60_ble_rev1_white_ansi_7u
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de60_ble_rev1_white_ansi_7u
+
   - board: de_core_nrf52
     shield: de60_ble_rev1_white_ansi_625u
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de60_ble_rev1_white_ansi_625u
+
   - board: de_core_nrf52
     shield: curve_e
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_curve_e
+    
   - board: de_core_nrf52
     shield: de108_ble_proto
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de108_ble_proto
