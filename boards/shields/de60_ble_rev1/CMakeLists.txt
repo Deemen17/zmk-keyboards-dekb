@@ -1,2 +1,1 @@
-target_sources(app PRIVATE ../../../defb/de_indicator.c)
-target_sources(app PRIVATE ../../../defb/de_buzzer.c)
+# Shared DEKB modules are registered from the repository root CMakeLists.txt.

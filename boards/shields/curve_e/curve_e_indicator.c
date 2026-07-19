@@ -181,7 +181,7 @@ static void curve_e_set_sleep(bool sleeping) {
     }
 }
 
-static int curve_e_ble_profile_listener(const zmk_event_t *eh) {
+static int curve_e_profile_listener(const zmk_event_t *eh) {
     ARG_UNUSED(eh);
     update_ble_status();
     return ZMK_EV_EVENT_BUBBLE;
@@ -225,8 +225,8 @@ static int curve_e_activity_listener(const zmk_event_t *eh) {
 }
 #endif
 
-ZMK_LISTENER(curve_e_ble_profile, curve_e_ble_profile_listener);
-ZMK_SUBSCRIPTION(curve_e_ble_profile, zmk_ble_active_profile_changed);
+ZMK_LISTENER(curve_e_profile, curve_e_profile_listener);
+ZMK_SUBSCRIPTION(curve_e_profile, zmk_ble_active_profile_changed);
 
 ZMK_LISTENER(curve_e_endpoint, curve_e_endpoint_listener);
 ZMK_SUBSCRIPTION(curve_e_endpoint, zmk_endpoint_changed);

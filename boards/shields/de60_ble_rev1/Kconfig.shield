@@ -7,24 +7,8 @@ config SHIELD_DE60_BLE_REV1_RED
 
 config SHIELD_DE60_BLE_REV1_WHITE_ANSI_7U
     def_bool $(shields_list_contains,de60_ble_rev1_white_ansi_7u)
-    select SPI 
-
-config SHIELD_DE60_BLE_REV1_WHITE_ANSI_10U
-    def_bool $(shields_list_contains,de60_ble_rev1_white_ansi_10u)
-    select SPI 
+    select SPI
 
 config SHIELD_DE60_BLE_REV1_WHITE_ANSI_625U
     def_bool $(shields_list_contains,de60_ble_rev1_white_ansi_625u)
-    select SPI  
-
-config SHIELD_DE60_BLE_REV1_WHITE_ISO_7U
-    def_bool $(shields_list_contains,de60_ble_rev1_white_iso_7u)
-    select SPI 
-
-config SHIELD_DE60_BLE_REV1_WHITE_ISO_625U
-    def_bool $(shields_list_contains,de60_ble_rev1_white_iso_625u)
-    select SPI 
-
-config SHIELD_DE60_BLE_REV1_WHITE_ISO_10U
-    def_bool $(shields_list_contains,de60_ble_rev1_white_iso_10u)
-    select SPI 
+    select SPI

@@ -1,0 +1,12 @@
+file_format: "1"
+id: de108_ble_proto
+name: DE108 BLE Proto
+type: shield
+requires: [de_core_nrf52]
+features:
+  - keys
+  - underglow
+outputs:
+  - usb
+  - ble
+url: https://github.com/Deemen17/

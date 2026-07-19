@@ -1,0 +1,12 @@
+# Copyright (c) 2026 DEKB
+# SPDX-License-Identifier: MIT
+
+if SHIELD_DE108_BLE_PROTO
+
+config ZMK_KEYBOARD_NAME
+    default "de108_ble_proto"
+
+config LED
+    default y
+
+endif # SHIELD_DE108_BLE_PROTO

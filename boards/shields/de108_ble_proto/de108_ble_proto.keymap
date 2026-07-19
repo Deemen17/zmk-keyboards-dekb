@@ -1,0 +1,19 @@
+#include "../de60_ble_rev1/common.keymap"
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        base {
+            label = "Default";
+            bindings = <
+&none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none
+&none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none
+&none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none &none
+&none &none &none &none &none &none &none &none &none &none &none &none       &none                         &none &none &none &none
+&none &none &none &none &none &none &none &none &none &none &none &none &none &none             &none       &none &none &none &none
+&none &none &none                   &none                         &none &none &none &none &none &none &none &none &none &none &none &none
+            >;
+        };
+    };
+};
