@@ -1,0 +1,13 @@
+# ZMK build matrix for DEKB firmware.
+# All default targets use the shared DEKB nRF52840 core and board-specific shields.
+include:
+  - board: de_core_nrf52
+    shield: de60_ble_rev1_red
+  - board: de_core_nrf52
+    shield: de60_ble_rev1_white_ansi_7u
+  - board: de_core_nrf52
+    shield: de60_ble_rev1_white_ansi_625u
+  - board: de_core_nrf52
+    shield: curve_e
+  - board: de_core_nrf52
+    shield: de108_ble_proto
