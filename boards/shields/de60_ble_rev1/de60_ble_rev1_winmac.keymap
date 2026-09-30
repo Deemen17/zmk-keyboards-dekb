@@ -9,7 +9,6 @@
 #define WFN 1
 #define MAC 2
 #define MFN 3
-#define SYS 4
 
 / {
     keymap {
@@ -29,11 +28,11 @@
         win_function_layer {
             label = "Win Function";
             bindings = <
-&kp GRAVE &kp F1    &kp F2    &kp F3    &kp F4    &kp F5    &kp F6    &kp F7    &kp F8    &kp F9    &kp F10   &kp F11   &kp F12   &kp DEL    &trans
-&trans    &trans    &kp UP    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans
-&trans    &kp LEFT  &kp DOWN  &kp RIGHT &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans              &trans
-&trans    &trans    &trans    &trans    &trans    &trans    &trans    &to WIN   &to MAC   &trans    &trans    &trans    &trans    &trans
-&trans    &trans    &trans                                  &trans                        &trans    &trans    &trans    &trans    &trans
+&kp GRAVE &kp F1    &kp F2    &kp F3    &kp F4    &kp F5    &kp F6    &kp F7    &kp F8    &kp F9    &kp F10   &kp F11   &kp F12   &DE_BLD    &trans
+&DE_USB   &DE_BT1   &DE_BT2   &DE_BT3   &none     &none     &none     &none     &none     &none     &none     &UGSPD    &UGSPI    &none
+&DE_BAT   &none     &none     &none     &none     &none     &none     &none     &none     &none     &UGHUD    &UGHUI              &UGTOG
+&DE_SLP   &none     &none     &none     &none     &none     &none     &none     &none     &UGSAD    &UGSAI    &none     &UGBRI    &trans
+&DE_OUT   &none     &to MAC                                 &none                         &none     &none     &UGEFR    &UGBRD    &UGEFF
             >;
         };
 
@@ -43,30 +42,19 @@
 &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans
 &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans
 &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans              &trans
-&trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans
-&kp LCTRL &kp LALT  &kp LGUI                                &trans                        &trans    &trans    &trans    &trans    &trans
+&trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &mo MFN
+&kp LCTRL &kp LALT  &kp LGUI                                &trans                        &trans    &mo MFN   &trans    &trans    &trans
             >;
         };
 
         mac_function_layer {
             label = "Mac Function";
             bindings = <
-&kp GRAVE &kp C_BRI_DN  &kp C_BRI_UP  &kp C_AC_SEARCH  &trans  &trans  &kp C_PREV  &kp C_PP  &kp C_NEXT  &kp C_MUTE  &kp C_VOL_DN  &kp C_VOL_UP  &trans  &trans  &trans 
-&trans    &trans    &kp UP    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans
-&trans    &kp LEFT  &kp DOWN  &kp RIGHT &trans    &trans    &trans    &trans    &trans    &trans    &trans    &trans              &trans
-&trans    &trans    &trans    &trans    &trans    &trans    &trans    &to WIN   &to MAC   &trans    &trans    &trans    &trans    &mo MFN
-&trans    &trans    &trans                                  &trans                        &trans    &mo MFN   &trans    &trans    &trans
-            >;
-        };
-
-        system_layer {
-            label = "System";
-            bindings = <
-&DE_BLD   &none     &none     &none     &none     &none     &none     &none     &none     &none     &none     &none     &none     &none     &none
+&kp GRAVE &kp C_BRI_DN &kp C_BRI_UP &kp C_AC_DESKTOP_SHOW_ALL_WINDOWS &kp C_AC_DESKTOP_SHOW_ALL_APPLICATIONS &kp C_AC_SEARCH &kp GLOBE &kp C_PREV &kp C_PP &kp C_NEXT &kp C_MUTE &kp C_VOL_DN &kp C_VOL_UP &DE_BLD &trans
 &DE_USB   &DE_BT1   &DE_BT2   &DE_BT3   &none     &none     &none     &none     &none     &none     &none     &UGSPD    &UGSPI    &none
 &DE_BAT   &none     &none     &none     &none     &none     &none     &none     &none     &none     &UGHUD    &UGHUI              &UGTOG
 &DE_SLP   &none     &none     &none     &none     &none     &none     &none     &none     &UGSAD    &UGSAI    &none     &UGBRI    &trans
-&DE_OUT   &none     &none                                   &none                         &none     &none     &UGEFR    &UGBRD    &UGEFF
+&DE_OUT   &to WIN   &none                                   &none                         &none     &none     &UGEFR    &UGBRD    &UGEFF
             >;
         };
 

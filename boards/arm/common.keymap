@@ -37,6 +37,8 @@
 #define DE_BAT de_battery
 #define DE_SLP de_sleep 0 0
 
+#define DE_OZW open_zmks
+
 #define UGTOG rgb_ug RGB_TOG
 #define UGBRD rgb_ug RGB_BRD
 #define UGBRI rgb_ug RGB_BRI
@@ -64,13 +66,13 @@
         fw_ver: fw_ver {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            display-name = "# DEKB ZMK Firmware 20260716";
-            bindings = <&kp D &kp E &kp K &kp B &kp LCTRL &kp LALT &kp LSHIFT &kp LGUI &kp RCTRL &kp RALT &kp RSHIFT &kp RGUI>;
+            display-name = "# DEKB ZMK 20260110";
+            bindings = <&kp LCTRL &kp LALT &kp LSHIFT &kp LGUI &kp RCTRL &kp RALT &kp RSHIFT &kp RGUI>;
         };
 
         open_zmks: open_zmks {
             compatible = "zmk,behavior-macro";
-            label = "OPEN_ZMKS_LINK";
+            label = "# OPEN ZMKS WEB";
             #binding-cells = <0>;
             tap-ms = <10>;  
             wait-ms = <10>;  
@@ -352,7 +354,7 @@
         compatible = "zmk,combos";
         combo_clear_mods {
             timeout-ms = <20>;
-            key-positions = <0 1 2 3>; // 1 and 5
+            key-positions = <0 1 2 3>;
             bindings = <&fw_ver>;
         };
 
