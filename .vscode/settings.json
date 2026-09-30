@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /home/de/zmk/app && west build -b de_core_nrf52 -d build/de60_quick -- -DSHIELD=de60_ble_rev1_white_ansi_7u -DZMK_EXTRA_MODULES=\"/home/de/dev/zmk-keyboards-dekb\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

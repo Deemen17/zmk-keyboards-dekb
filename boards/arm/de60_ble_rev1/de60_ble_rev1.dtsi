@@ -11,6 +11,7 @@
 #include "de60_ble_rev1-pinctrl.dtsi"
 #include "de60_ble_rev1-layouts.dtsi"
 #include "de60_ble_rev1-transforms.dtsi"
+#include "de60_ble_rev1-rgb.dtsi"
 
 // #define WAKEUP_SPACE
 #define WAKEUP_D

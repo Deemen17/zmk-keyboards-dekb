@@ -153,7 +153,7 @@ CONFIG_ZMK_RGB_UNDERGLOW_HUE_START=0
 CONFIG_ZMK_RGB_UNDERGLOW_SAT_START=100
 
 # Per-key RGB Layer Effect
-CONFIG_EXPERIMENTAL_RGB_LAYER=n
+CONFIG_EXPERIMENTAL_RGB_LAYER=y
 
 # ============================================================
 # BATTERY
