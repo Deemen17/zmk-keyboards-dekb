@@ -1,7 +1,7 @@
 # Copyright (c) 2026 DEKB
 # SPDX-License-Identifier: MIT
 
-if BOARD_DE60_BLE_REV1
+if BOARD_DE60_BLE_REV1 || BOARD_DE60_BLE_REV1_ADC || BOARD_DE60_BLE_REV1_FUELGAUGE
 
 config BOARD
     default "de60_ble_rev1"
@@ -38,4 +38,4 @@ config ZMK_BLE
 config ZMK_USB
 	default y
 
-endif # BOARD_DE60_BLE_REV1
+endif # DE60 BLE Rev1 board variants

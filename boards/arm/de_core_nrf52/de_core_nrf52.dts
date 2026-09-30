@@ -15,9 +15,6 @@
         zephyr,code-partition = &code_partition;
         zephyr,sram = &sram0;
         zephyr,flash = &flash0;
-        zephyr,console = &snippet_studio_rpc_usb_uart;
-        zephyr,uart-mcumgr = &snippet_studio_rpc_usb_uart;
-        zephyr,shell-uart = &snippet_studio_rpc_usb_uart;
     };
 
 };

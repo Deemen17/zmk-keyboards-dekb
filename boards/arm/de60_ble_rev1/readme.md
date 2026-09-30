@@ -5,3 +5,7 @@ cd ~/zmk/app && west build -p -b de60_ble_proto -S studio-rpc-usb-uart -- -DCONF
 west build -p -b nice_nano -- -DSHIELD=dengle -DZMK_EXTRA_MODULES="/home/de/dev/zmk-keyboards-dekb"    
 
 cd ~/zmk/app && west build -p -b de60_ble_rev1 -S studio-rpc-usb-uart -- -DZMK_EXTRA_MODULES="/home/de/dev/zmk-keyboards-dekb" && west flash
+
+west build -p -b de60_ble_rev1_adc -S studio-rpc-usb-uart -- -DZMK_EXTRA_MODULES="/home/de/dev/zmk-keyboards-dekb" && west flash
+west build -p -b de60_ble_rev1_fuelgauge -S studio-rpc-usb-uart -- -DZMK_EXTRA_MODULES="/home/de/dev/zmk-keyboards-dekb" && west flash
+

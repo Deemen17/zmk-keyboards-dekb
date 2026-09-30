@@ -84,7 +84,7 @@
 
     red_tsangan_split_bs_rshift: red_tsangan_split_bs_rshift {
         compatible = "zmk,physical-layout";
-        display-name = "RED - ANSI - Space 7U - Split Backspace - Split Right Shift";
+        display-name = "RED ANSI 7U SB SR";
         transform = <&red_ansi_tsangan_split_bs_rshift_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
@@ -155,7 +155,7 @@
 
     white_tsangan_split_bs_rshift: white_tsangan_split_bs_rshift {
         compatible = "zmk,physical-layout";
-        display-name = "WHITE - ANSI - Space 7U - Split Backspace - Split Right Shift";
+        display-name = "WHITE ANSI 7U SB SR";
         transform = <&white_ansi_tsangan_split_bs_rshift_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
@@ -299,7 +299,7 @@
 
     white_tsangan_arrow_split_bs: white_tsangan_arrow_split_bs {
         compatible = "zmk,physical-layout";
-        display-name = "WHITE - ANSI - Space 7U - Arrow - Split Backspace";
+        display-name = "WHITE ANSI 7U ARW SB";
 
         kscan = <&kscan0>;
         transform = <&white_ansi_tsangan_arrow_split_bs_transform>;
@@ -373,7 +373,7 @@
 
     white_ansi: white_ansi {
         compatible = "zmk,physical-layout";
-        display-name = "WHITE - ANSI - Space 6.25U";
+            display-name = "WHITE ANSI 6.25U";
 
         kscan = <&kscan0>;
         transform = <&white_ansi_transform>;
@@ -445,7 +445,7 @@
 
     white_ansi_split_rshift: white_ansi_split_rshift {
         compatible = "zmk,physical-layout";
-        display-name = "WHITE - ANSI - Space 6.25U - Split Right Shift";
+            display-name = "WHITE ANSI 6.25U SR";
 
         kscan = <&kscan0>;
         transform = <&white_ansi_split_rshift_transform>;
@@ -518,7 +518,7 @@
 
     both_ansi_10u_split_rshift: both_ansi_10u_split_rshift {
         compatible = "zmk,physical-layout";
-        display-name = "BOTH - ANSI - Space 10U - Split Right Shift";
+        display-name = "BOTH ANSI 10U SR";
 
         kscan = <&kscan0>;
         transform = <&both_ansi_10u_split_rshift_transform>;
@@ -588,7 +588,7 @@
 
     both_ansi_10u_split_bs_rshift: both_ansi_10u_split_bs_rshift {
         compatible = "zmk,physical-layout";
-        display-name = "BOTH - ANSI - Space 10U - Split Backspace - Split Right Shift";
+        display-name = "BOTH ANSI 10U SB SR";
 
         kscan = <&kscan0>;
         transform = <&both_ansi_10u_split_bs_rshift_transform>;

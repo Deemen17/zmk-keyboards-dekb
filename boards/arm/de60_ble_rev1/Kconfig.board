@@ -5,3 +5,10 @@ config BOARD_DE60_BLE_REV1
     bool "de60_ble_rev1"
     depends on SOC_NRF52840_QIAA
 
+config BOARD_DE60_BLE_REV1_FUELGAUGE
+    bool "de60_ble_rev1_fuelgauge"
+    depends on SOC_NRF52840_QIAA
+
+config BOARD_DE60_BLE_REV1_ADC
+    bool "de60_ble_rev1_adc"
+    depends on SOC_NRF52840_QIAA

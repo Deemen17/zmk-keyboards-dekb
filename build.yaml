@@ -1,0 +1,6 @@
+# GitHub Actions build matrix for the maintained DEKB boards and shields.
+---
+include:
+  - board: de60_ble_rev1_adc
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de60_ble_rev1_adc_sep_2026

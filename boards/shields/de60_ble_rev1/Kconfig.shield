@@ -28,3 +28,6 @@ config SHIELD_DE60_BLE_REV1_WHITE_ISO_625U
 config SHIELD_DE60_BLE_REV1_WHITE_ISO_10U
     def_bool $(shields_list_contains,de60_ble_rev1_white_iso_10u)
     select SPI 
+
+config SHIELD_DE60_BLE_REV1_ADC
+    def_bool $(shields_list_contains,de60_ble_rev1_adc)

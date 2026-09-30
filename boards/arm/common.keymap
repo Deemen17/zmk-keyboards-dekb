@@ -49,14 +49,37 @@
 #define UGEFR rgb_ug RGB_EFR
 #define UGEFF rgb_ug RGB_EFF
 
+&caps_word {
+    continue-list = <
+        UNDERSCORE 
+        MINUS 
+        BACKSPACE 
+        DELETE
+    >;
+};
+
 / {
     behaviors {
 
         fw_ver: fw_ver {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            display-name = "#DEKB BLE ZMK Firmware 20260426";
+            display-name = "# DEKB ZMK Firmware 20260716";
             bindings = <&kp D &kp E &kp K &kp B &kp LCTRL &kp LALT &kp LSHIFT &kp LGUI &kp RCTRL &kp RALT &kp RSHIFT &kp RGUI>;
+        };
+
+        open_zmks: open_zmks {
+            compatible = "zmk,behavior-macro";
+            label = "OPEN_ZMKS_LINK";
+            #binding-cells = <0>;
+            tap-ms = <10>;  
+            wait-ms = <10>;  
+            bindings
+                = <&macro_tap &kp H &kp T &kp T &kp P &kp S &kp COLON &kp FSLH &kp FSLH> // https://
+                , <&macro_tap &kp Z &kp M &kp K &kp S &kp DOT>                            // zmks.
+                , <&macro_tap &kp P &kp H &kp D &kp E &kp S &kp I &kp G &kp N &kp DOT>    // phdesign.
+                , <&macro_tap &kp C &kp C &kp ENTER>                                      // cc + Enter để chạy luôn
+                ;
         };
 
         de_battery: de_battery {
@@ -166,9 +189,9 @@
             >;
         };
 
-        mo: momentary_layer { display-name = "Layer Momentary"; };
-        to: to_layer { display-name = "Layer To"; };
-        tog: toggle_layer { display-name = "Layer Toggle"; };
+        // mo: momentary_layer { display-name = "Layer Momentary"; };
+        // to: to_layer { display-name = "Layer To"; };
+        // tog: toggle_layer { display-name = "Layer Toggle"; };
 
         mt: mod_tap {
             compatible = "zmk,behavior-hold-tap";
@@ -208,16 +231,6 @@
             quick-tap-ms = <240>;
             bindings = <&mo>, <&kp>;
             display-name = "Layer-Tap(HP)";
-        };
-
-        space_fn1: space_fn1 {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "hold-preferred";
-            tapping-term-ms = <220>;
-            quick-tap-ms = <180>;
-            bindings = <&mo>, <&kp>;
-            display-name = "Space FN1";
         };
         
         // Mouse 

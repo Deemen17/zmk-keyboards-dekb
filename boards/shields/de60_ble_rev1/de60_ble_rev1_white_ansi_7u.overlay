@@ -2,8 +2,8 @@
 #include <physical_layouts.dtsi>
 #include "common.overlay"
 
-#define WHITE_MAP_UPPER_ANSI UPPER_MAP
-#define WHITE_LAYOUT_UPPER_ANSI UPPER_LAYOUT
+#define WHITE_MAP_UPPER_ANSI MAP_R0_BS_1U MAP_R1 MAP_R2 MAP_R3_ANSI_L MAP_R3_R
+#define WHITE_LAYOUT_UPPER_ANSI ROW0_FIXED , ROW0_BS_1U , ROW1_FIXED , ROW1_ANSI , ROW2_FIXED , ROW2_ANSI , ROW3_ANSI , ROW3_FIXED , ROW3_RS_ARROW
 
 / {
 
@@ -126,6 +126,62 @@
 
         keys =  WHITE_LAYOUT_UPPER_ANSI
                 , SPC_10U_HHKB;
+    };
+
+    /* Additional ANSI 7U variants requested by user */
+
+    /* ANSI 7U - BS 1U, RS 175U */
+    white_ansi_7u_bs1u_rs175u_transform: white_ansi_7u_bs1u_rs175u_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            MAP_R0_BS_1U MAP_R1 MAP_R2 MAP_R3_ANSI_L MAP_R3_R WHT_MAP_R4_7U_WK
+        >;
+    };
+
+    layout_white_ansi_7u_bs1u_rs175u: layout_white_ansi_7u_bs1u_rs175u {
+        compatible = "zmk,physical-layout";
+        display-name = "WHITE ANSI 7U BS1U RS175U";
+        transform = <&white_ansi_7u_bs1u_rs175u_transform>;
+
+        keys = ROW0_FIXED , ROW0_BS_1U , ROW1_FIXED , ROW1_ANSI , ROW2_FIXED , ROW2_ANSI , ROW3_ANSI , ROW3_FIXED , ROW3_RS_175U , ROW4_7U_WK;
+    };
+
+    /* ANSI 7U - BS 2U, RS 175U */
+    white_ansi_7u_bs2u_rs175u_transform: white_ansi_7u_bs2u_rs175u_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            MAP_R0_BS_2U MAP_R1 MAP_R2 MAP_R3_ANSI_L MAP_R3_R WHT_MAP_R4_7U_WK
+        >;
+    };
+
+    layout_white_ansi_7u_bs2u_rs175u: layout_white_ansi_7u_bs2u_rs175u {
+        compatible = "zmk,physical-layout";
+        display-name = "WHITE ANSI 7U BS2U RS175U";
+        transform = <&white_ansi_7u_bs2u_rs175u_transform>;
+
+        keys = ROW0_FIXED , ROW0_BS_2U , ROW1_FIXED , ROW1_ANSI , ROW2_FIXED , ROW2_ANSI , ROW3_ANSI , ROW3_FIXED , ROW3_RS_175U , ROW4_7U_WK;
+    };
+
+    /* ANSI 7U - BS 1U, RS Arrow */
+    white_ansi_7u_bs1u_rsarrow_transform: white_ansi_7u_bs1u_rsarrow_transform {
+        compatible = "zmk,matrix-transform";
+        columns = <7>;
+        rows = <10>;
+        map = <
+            MAP_R0_BS_1U MAP_R1 MAP_R2 MAP_R3_ANSI_L MAP_R3_R WHT_MAP_R4_7U_ARROW
+        >;
+    };
+
+    layout_white_ansi_7u_bs1u_rsarrow: layout_white_ansi_7u_bs1u_rsarrow {
+        compatible = "zmk,physical-layout";
+        display-name = "WHITE ANSI 7U BS1U RS-ARROW";
+        transform = <&white_ansi_7u_bs1u_rsarrow_transform>;
+
+        keys = ROW0_FIXED , ROW0_BS_1U , ROW1_FIXED , ROW1_ANSI , ROW2_FIXED , ROW2_ANSI , ROW3_ANSI , ROW3_FIXED , ROW3_RS_ARROW , ROW4_7U_ARROW;
     };
 
 };

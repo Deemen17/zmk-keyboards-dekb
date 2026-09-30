@@ -24,6 +24,7 @@
 #include <zmk/events/hid_indicators_changed.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/usb.h>
 
 
 #if __has_include(<zmk/events/activity_state_changed.h>)
@@ -57,17 +58,52 @@ static const uint8_t led_idx[] = {
 // CONFIG
 // =====================
 
+/*
+ * Indicator timing
+ *
+ * These values control user-visible timing and state lifetime.
+ * Keep visual duration and state lifetime separate where possible.
+ */
+
 #define DE_INDICATOR_PRE_SLEEP_MS 200
 #define DE_INDICATOR_BLINK_FAST_MS 120
 #define DE_INDICATOR_BLINK_SLOW_MS 500
-#define DE_INDICATOR_BATTERY_CHECK_MS 1500
-#define DE_INDICATOR_OUTPUT_CHECK_MS 3000
 
+/* Duration of the manual battery status display. */
+#define DE_INDICATOR_BATTERY_CHECK_MS 1500
+
+/*
+ * Lifetime of the output-check state.
+ * This is intentionally longer than some visual patterns so the state
+ * remains stable while related BLE/USB events settle.
+ */
+#define DE_INDICATOR_OUTPUT_CHECK_STATE_MS 3000
+
+/*
+ * BLE indicator timing
+ *
+ * BLE events can arrive in bursts and may race with endpoint changes.
+ * Debounce prevents duplicate visual events.
+ * Visual grace allows a BLE event to remain visible briefly even when
+ * USB is currently the active HID endpoint.
+ */
 #define DE_INDICATOR_BLE_SWITCH_MS 250
+
+/* Show successful BLE connection feedback for 3 seconds. */
 #define DE_INDICATOR_BLE_CONNECTED_TIMEOUT_MS 3000
+
+/* Stop showing pairing/connecting animation if no new state arrives. */
 #define DE_INDICATOR_BLE_PAIRING_TIMEOUT_MS 30000
 #define DE_INDICATOR_BLE_CONNECTING_TIMEOUT_MS 30000
+
+/* Ignore duplicate BLE profile events arriving within this window. */
 #define DE_INDICATOR_BLE_EVENT_DEBOUNCE_MS 120
+
+/*
+ * After meaningful BLE activity, allow BLE feedback to remain visible
+ * briefly even if the USB endpoint is active.
+ * AKA BLE visual disapper after 10s when plug in USB
+ */
 #define DE_INDICATOR_BLE_VISUAL_GRACE_MS 10000
 
 #define DE_INDICATOR_LAYER_EVENT_MS 3000
@@ -77,9 +113,6 @@ static const uint8_t led_idx[] = {
 #define DE_INDICATOR_BATTERY_DEADLY     10
 #define DE_INDICATOR_BATTERY_CRITICAL   20
 #define DE_INDICATOR_BATTERY_LOW        30
-
-#define DE_INDICATOR_BATTERY_CHECK_MEDIUM_MS 1000
-#define DE_INDICATOR_BATTERY_CHECK_HIGH_MS   2000
 
 #define DE_INDICATOR_BATTERY_DEADLY_REMIND_INTERVAL_MS     30000
 #define DE_INDICATOR_BATTERY_CRITICAL_REMIND_INTERVAL_MS   30000
@@ -101,6 +134,7 @@ static const uint8_t led_idx[] = {
 #define DE_INDICATOR_LAYER_EVENT_DEBOUNCE_MS 80
 #define DE_INDICATOR_UPDATE_INTERVAL_MS 50
 
+#define DE_INDICATOR_BATTERY_WARNING_GRACE_MS (5 * 60 * 1000)
 
 // =====================
 // DE CUSTOM KEYCODES
@@ -130,9 +164,6 @@ typedef struct {
     bool ble_is_connecting;
     bool ble_is_connected;
 
-    bool battery_is_warming;
-
-    bool capslock_valid;
 } indicator_flags_t;
 
 typedef struct {
@@ -145,7 +176,6 @@ typedef struct {
     int64_t output_usb_start_ts;
 
     int64_t battery_check_start_ts;
-    int64_t battery_warm_start_ts;
     int64_t battery_warn_last_ts;
 
     int64_t layer_start_ts;
@@ -155,13 +185,21 @@ typedef struct {
     int64_t ble_connected_start_ts;
     int64_t ble_pairing_start_ts;
     int64_t ble_connecting_start_ts;
-    int64_t ble_last_activity_ts;
+
+    /* Last accepted BLE event, used only for debounce. */
+    int64_t ble_event_last_ts;
+
+    /*
+    * Last meaningful BLE activity used by the visual resolver.
+    * This is intentionally separate from the debounce timestamp.
+    */
+    int64_t ble_visual_activity_ts;
     
-    int64_t capslock_last_update_ts;
 } indicator_timers_t;
 
 typedef struct {
     uint8_t battery_percent;
+    bool battery_valid;
     uint8_t active_layer;
     uint8_t ble_profile_index;
 
@@ -303,7 +341,7 @@ static inline bool debounce_ok(int64_t now, int64_t *last, int32_t interval_ms) 
     return true;
 }
 
-static inline void led_rainbow_cycle(int64_t now, int32_t cycle_ms) {
+static inline void led_rainbow_cycle(int64_t elapsed, int32_t cycle_ms) {
     static const uint8_t colors[] = {
         LED_RED,
         LED_YELLOW,
@@ -312,9 +350,14 @@ static inline void led_rainbow_cycle(int64_t now, int32_t cycle_ms) {
         LED_BLUE,
         LED_MAGENTA,
     };
-    int64_t t = now % cycle_ms;
+
     int64_t segment_ms = cycle_ms / ARRAY_SIZE(colors);
-    uint8_t index = t / segment_ms;
+    uint8_t index = elapsed / segment_ms;
+
+    if (index >= ARRAY_SIZE(colors)) {
+        index = ARRAY_SIZE(colors) - 1;
+    }
+
     led_set(colors[index]);
 }
 
@@ -323,11 +366,11 @@ static inline void led_rainbow_cycle(int64_t now, int32_t cycle_ms) {
 // =====================
 
 static void clear_transient_flags(int64_t now) {
-    if (ctx.flags.evt_output_check && (now - ctx.timers.output_check_start_ts >= DE_INDICATOR_OUTPUT_CHECK_MS)) {
+    if (ctx.flags.evt_output_check && (now - ctx.timers.output_check_start_ts >= DE_INDICATOR_OUTPUT_CHECK_STATE_MS)) {
         ctx.flags.evt_output_check = false;
     }
 
-    if (ctx.flags.evt_output_usb && (now - ctx.timers.output_usb_start_ts >= DE_INDICATOR_OUTPUT_CHECK_MS)) {
+    if (ctx.flags.evt_output_usb && (now - ctx.timers.output_usb_start_ts >= DE_INDICATOR_OUTPUT_CHECK_STATE_MS)) {
         ctx.flags.evt_output_usb = false;
     }
 
@@ -365,28 +408,32 @@ static void clear_transient_flags(int64_t now) {
         ctx.flags.ble_is_connecting = false;
     }
 
-    if (ctx.flags.capslock_valid && (now - ctx.timers.capslock_last_update_ts > 5000)) {
-        ctx.flags.capslock_valid = false;
-    }
-
 }
 
 // =====================
 // STATE RESOLVER
 // =====================
 
-static de_indicator_state_t resolve_state_raw(int64_t now) {
-    // Allow BLE visual feedback when:
-    // - Not in USB mode
-    // - OR recently switched BLE profile
-    // - OR within grace window after BLE activity
-    bool ble_visual_allowed = !ctx.data.is_usb_output ||
-                              ctx.flags.evt_ble_switch ||
-                              ((now - ctx.timers.ble_last_activity_ts) < DE_INDICATOR_BLE_VISUAL_GRACE_MS);
+/*
+ * State priority
+ *
+ * Higher-priority states temporarily override lower-priority states.
+ *
+ * 1. Sleep
+ * 2. Boot
+ * 3. Output transition / manual output status
+ * 4. Manual battery check
+ * 5. BLE transition/status
+ * 6. Battery warning
+ * 7. Persistent Caps Lock status
+ * 8. Idle
+ *
+ * Persistent states such as Caps Lock are intentionally placed near
+ * the bottom so temporary notifications can override them and then
+ * naturally return to the previous status.
+ */
 
-    if (ctx.flags.is_sleeping) {
-        return DE_INDICATOR_STATE_SLEEP;
-    }
+static de_indicator_state_t resolve_state_raw(int64_t now) {
 
     if (ctx.flags.is_booting) {
         return DE_INDICATOR_STATE_BOOT;
@@ -408,9 +455,14 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
         return DE_INDICATOR_STATE_BLE_SWITCH_EVENT;
     }
 
-    // if (ctx.flags.evt_layer) {
-    //     return DE_INDICATOR_STATE_LAYER_EVENT;
-    // }
+    // Allow BLE visual feedback when:
+    // - Not in USB mode
+    // - OR recently switched BLE profile
+    // - OR within grace window after BLE activity
+    bool ble_visual_allowed = 
+        !ctx.data.is_usb_output  ||
+        ctx.flags.evt_ble_switch ||
+        ((now - ctx.timers.ble_visual_activity_ts) < DE_INDICATOR_BLE_VISUAL_GRACE_MS);
 
     // Only show BLE states if visual feedback is allowed
     if (ble_visual_allowed) {
@@ -426,42 +478,49 @@ static de_indicator_state_t resolve_state_raw(int64_t now) {
             return DE_INDICATOR_STATE_BLE_CONNECTED;
         }
     }
+    
+    /*
+    * Battery warnings are suppressed while USB power is present.
+    *
+    * DE60 BLE REV1 does not expose charger status to the MCU, so USB power
+    * cannot be interpreted as confirmed charging or full-charge state.
+    */
+    if (ctx.data.battery_valid && (zmk_usb_is_powered() == 0)) {
+        int64_t time_since_last_warn = now - ctx.timers.battery_warn_last_ts;
+
+        if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_DEADLY) {
+            if (time_since_last_warn >= DE_INDICATOR_BATTERY_DEADLY_REMIND_INTERVAL_MS) {
+                ctx.timers.battery_warn_last_ts = now;
+                return DE_INDICATOR_STATE_BATTERY_DEADLY;
+            }
+            else if (ctx.state == DE_INDICATOR_STATE_BATTERY_DEADLY) {
+                return DE_INDICATOR_STATE_BATTERY_DEADLY;
+            }
+        }
+        else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_CRITICAL) {
+            if (time_since_last_warn >= DE_INDICATOR_BATTERY_CRITICAL_REMIND_INTERVAL_MS) {
+                ctx.timers.battery_warn_last_ts = now;
+                return DE_INDICATOR_STATE_BATTERY_CRITICAL;
+            }
+            else if (ctx.state == DE_INDICATOR_STATE_BATTERY_CRITICAL) {
+                return DE_INDICATOR_STATE_BATTERY_CRITICAL;
+            }
+        }
+        else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_LOW) {
+            if (time_since_last_warn >= DE_INDICATOR_BATTERY_LOW_REMIND_INTERVAL_MS) {
+                ctx.timers.battery_warn_last_ts = now;
+                return DE_INDICATOR_STATE_BATTERY_LOW;
+            }
+            else if (ctx.state == DE_INDICATOR_STATE_BATTERY_LOW) {
+                return DE_INDICATOR_STATE_BATTERY_LOW;
+            }
+        }
+    }
 
     if (ctx.data.capslock_on) {
         return DE_INDICATOR_STATE_CAPSLOCK;
     }
     
-    // Battery warnings
-    int64_t time_since_last_warn = now - ctx.timers.battery_warn_last_ts;
-
-    if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_DEADLY) {
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_DEADLY_REMIND_INTERVAL_MS) {
-            ctx.timers.battery_warn_last_ts = now;
-            return DE_INDICATOR_STATE_BATTERY_DEADLY;
-        }
-        else if (ctx.state == DE_INDICATOR_STATE_BATTERY_DEADLY) {
-            return DE_INDICATOR_STATE_BATTERY_DEADLY;
-        }
-    }
-    else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_CRITICAL) {
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_CRITICAL_REMIND_INTERVAL_MS) {
-            ctx.timers.battery_warn_last_ts = now;
-            return DE_INDICATOR_STATE_BATTERY_CRITICAL;
-        }
-        else if (ctx.state == DE_INDICATOR_STATE_BATTERY_CRITICAL) {
-            return DE_INDICATOR_STATE_BATTERY_CRITICAL;
-        }
-    }
-    else if (ctx.data.battery_percent <= DE_INDICATOR_BATTERY_LOW) {
-        if (time_since_last_warn >= DE_INDICATOR_BATTERY_LOW_REMIND_INTERVAL_MS) {
-            ctx.timers.battery_warn_last_ts = now;
-            return DE_INDICATOR_STATE_BATTERY_LOW;
-        }
-        else if (ctx.state == DE_INDICATOR_STATE_BATTERY_LOW) {
-            return DE_INDICATOR_STATE_BATTERY_LOW;
-        }
-    }
-
     return DE_INDICATOR_STATE_IDLE;
 }
 
@@ -544,11 +603,6 @@ static void render_battery_warning(int64_t now, de_indicator_state_t state) {
 
 static void render_indicator_state(de_indicator_state_t state, int64_t now) {
 
-    if (ctx.flags.is_sleeping) {
-        led_off_all();
-        return;
-    }
-
     switch (state) {
     case DE_INDICATOR_STATE_SLEEP:
     case DE_INDICATOR_STATE_IDLE:
@@ -576,7 +630,7 @@ static void render_indicator_state(de_indicator_state_t state, int64_t now) {
         break;
 
     case DE_INDICATOR_STATE_BOOT: 
-        led_rainbow_cycle(now, DE_INDICATOR_BOOT_MS);
+        led_rainbow_cycle(now - ctx.timers.boot_start_ts, DE_INDICATOR_BOOT_MS);
         break;
 
     case DE_INDICATOR_STATE_LAYER_EVENT:
@@ -615,34 +669,6 @@ static void render_indicator_state(de_indicator_state_t state, int64_t now) {
 // PUBLIC API
 // =====================
 
-void de_indicator_process(void) {
-    int64_t now = k_uptime_get();
-
-    if (ctx.timers.boot_start_ts == 0) {
-        ctx.flags.is_booting = true;
-        ctx.timers.boot_start_ts = now;
-        ctx.timers.state_enter_time = now;
-        ctx.state = DE_INDICATOR_STATE_BOOT;
-    }
-
-    int64_t idle_time = now - ctx.timers.last_activity_time;
-    clear_transient_flags(now);
-    
-    // Turn off LEDs before is_sleeping timeout
-    #if IS_ENABLED(CONFIG_ZMK_SLEEP)
-    if (!ctx.flags.is_sleeping &&
-        !ctx.data.is_usb_output &&
-        ctx.timers.last_activity_time != 0 &&
-        idle_time > (CONFIG_ZMK_IDLE_SLEEP_TIMEOUT - DE_INDICATOR_PRE_SLEEP_MS)) {
-            ctx.flags.is_sleeping = true;
-            led_off_all();
-        }
-    #endif // IS_ENABLED(CONFIG_ZMK_SLEEP) 
-        
-    de_indicator_state_t state = resolve_state(now);
-    render_indicator_state(state, now);
-}
-
 void de_indicator_trigger_battery_check(void) {
     #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
     ctx.data.battery_percent = zmk_battery_state_of_charge();
@@ -668,7 +694,7 @@ void de_indicator_trigger_output_check(bool is_usb_output) {
 void de_indicator_trigger_show_led_output_usb(void) {
     if (!ctx.flags.evt_output_usb && ctx.data.is_usb_output) {
         ctx.flags.evt_output_usb = true;
-        de_indicator_ble_disabled();
+        de_indicator_ble_disabled(); // Disable BLE visual feedback when USB output is active
         ctx.timers.output_usb_start_ts = k_uptime_get();
     }
 }
@@ -715,8 +741,8 @@ static void de_indicator_ble_disabled(void) {
 
 void de_indicator_set_battery(uint8_t percent) {
     ctx.data.battery_percent = percent;
-    // Assume battery is chagring via USB
-    if (ctx.data.is_usb_output) {
+    // Suppress low-battery warning while USB power is present.
+    if (zmk_usb_is_powered()) {
         de_indicator_clear_battery_warning();
     }
 }
@@ -730,15 +756,30 @@ void de_indicator_set_sleep(bool is_sleeping) {
 }
 
 static void de_indicator_clear_battery_warning(void) {
-    // Push the last warn ts into the future to delay next warning cycle, giving user a grace period after they check the battery
-    ctx.timers.battery_warn_last_ts = k_uptime_get() + 1800000ULL; 
+    int64_t now = k_uptime_get();
+
+    /*
+    * Delay the next battery warning after USB power is detected.
+    *
+    * This prevents a low-battery warning from immediately returning when
+    * the keyboard transitions to USB power.
+    */
+    ctx.timers.battery_warn_last_ts =
+        now + DE_INDICATOR_BATTERY_WARNING_GRACE_MS;
+
+    if (ctx.state == DE_INDICATOR_STATE_BATTERY_LOW ||
+        ctx.state == DE_INDICATOR_STATE_BATTERY_CRITICAL ||
+        ctx.state == DE_INDICATOR_STATE_BATTERY_DEADLY) {
+        ctx.state = DE_INDICATOR_STATE_IDLE;
+        ctx.timers.state_enter_time = now;
+    }
 }
 
 // =====================
 // ZMK EVENT INTEGRATION
 // =====================
 
-// Render LED Incdication based on user keycode presses 
+// Handle DE-specific indicator commands exposed as custom keycodes.
 static int de_indicator_handle_keycode_user(const struct zmk_keycode_state_changed *event) {
     zmk_key_t key = event->keycode;
     LOG_DBG("key 0x%X state=%d", key, event->state);
@@ -765,7 +806,6 @@ static int de_indicator_handle_keycode_user(const struct zmk_keycode_state_chang
             return ZMK_EV_EVENT_HANDLED;
 
         case SHOW_LED_OUTPUT_USB_KEYCODE:
-            // de_indicator_ble_disabled();
             de_indicator_trigger_show_led_output_usb();
             return ZMK_EV_EVENT_HANDLED;
         
@@ -803,9 +843,11 @@ static int de_indicator_ble_profile_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    if (!debounce_ok(now, &ctx.timers.ble_last_activity_ts, DE_INDICATOR_BLE_EVENT_DEBOUNCE_MS)) {
+    if (!debounce_ok(now, &ctx.timers.ble_event_last_ts, DE_INDICATOR_BLE_EVENT_DEBOUNCE_MS)) {
         return ZMK_EV_EVENT_BUBBLE;
     }
+
+    ctx.timers.ble_visual_activity_ts = now;
 
     // Compare current active profile index with last known index to detect profile switch
     uint8_t current_profile_index = zmk_ble_active_profile_index();
@@ -845,7 +887,7 @@ void de_indicator_trigger_ble_profile_status(void) {
     bt_addr_le_t *addr = zmk_ble_active_profile_addr();
     ctx.data.ble_profile_paired = (addr != NULL) && !bt_addr_le_eq(addr, BT_ADDR_LE_ANY);
 
-    ctx.timers.ble_last_activity_ts = now;
+    ctx.timers.ble_visual_activity_ts = now;
 
     if (ctx.data.ble_profile_connected) {
         de_indicator_ble_connected();
@@ -880,7 +922,7 @@ static int de_indicator_endpoint_changed_listener(const zmk_event_t *eh) {
     }
 
     // If switched to USB, suppress BLE output check if there was recent BLE activity to avoid false trigger
-    bool ble_switch_recent = (now - ctx.timers.ble_last_activity_ts) < DE_INDICATOR_OUTPUT_CHECK_SUPPRESS_AFTER_BLE_MS;
+    bool ble_switch_recent = (now - ctx.timers.ble_visual_activity_ts) < DE_INDICATOR_OUTPUT_CHECK_SUPPRESS_AFTER_BLE_MS;
 
     // ===== USB =====
     if (is_usb) {
@@ -895,7 +937,7 @@ static int de_indicator_endpoint_changed_listener(const zmk_event_t *eh) {
     // ===== BLE =====
     if (is_ble) {
         // Short window to avoid false output check trigger after BLE event
-        bool ble_recent_activity = (now - ctx.timers.ble_last_activity_ts < 50);
+        bool ble_recent_activity = (now - ctx.timers.ble_visual_activity_ts < 50);
         
         bool no_ble_activity =
             !ctx.flags.ble_is_pairing &&
@@ -924,6 +966,9 @@ static int de_indicator_battery_listener(const zmk_event_t *eh) {
     }
 
     de_indicator_set_battery(ev->state_of_charge);
+    // Mark battery as valid to indicate that we have received a valid battery state
+    ctx.data.battery_valid = true;
+
     return ZMK_EV_EVENT_BUBBLE;
 }
 #endif
@@ -940,7 +985,6 @@ static int de_indicator_hid_listener(const zmk_event_t *eh) {
     
     bool caps = ((zmk_hid_indicators_get_current_profile() & CAPSLOCK_BIT) != 0);
     ctx.data.capslock_on = caps;
-    ctx.timers.capslock_last_update_ts = k_uptime_get();
 
     return ZMK_EV_EVENT_BUBBLE;
 }
@@ -1037,11 +1081,22 @@ void de_indicator_update(void) {
     int64_t now = k_uptime_get();
     clear_transient_flags(now);
 
+#if IS_ENABLED(CONFIG_ZMK_SLEEP)
+    int64_t idle_time = now - ctx.timers.last_activity_time;
+
+    if (!ctx.flags.is_sleeping && 
+        !ctx.data.is_usb_output &&
+        ctx.timers.last_activity_time != 0 &&
+        idle_time > (CONFIG_ZMK_IDLE_SLEEP_TIMEOUT - DE_INDICATOR_PRE_SLEEP_MS)) {
+        ctx.flags.is_sleeping = true;
+    }
+    
     if (ctx.flags.is_sleeping) {
         led_off_all();
-        return; 
+        return;
     }
-
+#endif // CONFIG_ZMK_SLEEP
+    
     de_indicator_state_t state = resolve_state(now);
     render_indicator_state(state, now);
 }
@@ -1052,12 +1107,6 @@ static void de_indicator_update_work_handler(struct k_work *work) {
     
     // Dynamic Polling 
     int32_t next_delay = DE_INDICATOR_UPDATE_INTERVAL_MS; // Default 50ms
-    
-    // if (ctx.state == DE_INDICATOR_STATE_IDLE || 
-    //     ctx.state == DE_INDICATOR_STATE_CAPSLOCK ||
-    //     ctx.flags.is_sleeping) {
-    //     next_delay = 500; 
-    // }
     
     (void)k_work_schedule(&de_indicator_update_work, K_MSEC(next_delay));
 }
@@ -1075,10 +1124,12 @@ void de_indicator_init(void) {
     ctx.timers.state_enter_time = now;
     ctx.flags.is_booting = true;
     ctx.timers.boot_start_ts = ctx.timers.state_enter_time;
+    ctx.data.battery_valid = false;
     
     led_off_all();
 
-    ctx.timers.battery_warn_last_ts = now;
+    // Initialize battery warning timer to allow immediate warning if battery is low on startup
+    ctx.timers.battery_warn_last_ts = now - DE_INDICATOR_BATTERY_LOW_REMIND_INTERVAL_MS;
     
     if (!de_indicator_runtime_started) {
         k_work_init_delayable(&de_indicator_update_work, de_indicator_update_work_handler);

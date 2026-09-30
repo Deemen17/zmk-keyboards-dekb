@@ -1,5 +1,6 @@
 #include <dt-bindings/led/led.h>
 #include "common_layouts.dtsi"
+#include "common_map.dtsi"
 
 / {
     aliases {
@@ -98,7 +99,9 @@
         compatible = "zmk,matrix-transform";
         columns = <7>;
         rows = <10>;
-        map = < WHT_MAP_ALL >;
+        map = < 
+            MAP_ALL_R0_1U_R1234_ISO WHT_MAP_R4_625U_A
+        >;
     };
     
     layout_all: layout_all {
@@ -106,7 +109,9 @@
         display-name = "ALL KEYS";
         transform = <&matrix_transform_all>;
 
-        keys = WHT_LAYOUT_ALL;
+        keys = 
+            WHT_LAYOUT_ALL
+        ;
     };
 };
 

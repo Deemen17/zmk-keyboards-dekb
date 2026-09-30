@@ -166,7 +166,7 @@
             >;
         };
 
-        mo: momentary_layer { display-name = "Layer Momentary"; };
+        mo: momentary_layer { label = "MO"; display-name = "Layer Momentary"; };
         to: to_layer { display-name = "Layer To"; };
         tog: toggle_layer { display-name = "Layer Toggle"; };
 

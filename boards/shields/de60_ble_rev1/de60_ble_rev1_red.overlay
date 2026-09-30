@@ -2,8 +2,8 @@
 #include <physical_layouts.dtsi>
 #include "common.overlay"
 
-#define RED_MAP_UPPER   UPPER_MAP
-#define RED_LAYOUT_UPPER UPPER_LAYOUT
+#define RED_MAP_UPPER   MAP_R0_BS_1U MAP_R1 MAP_R2 MAP_R3_ANSI_L MAP_R3_R
+#define RED_LAYOUT_UPPER ROW0_FIXED , ROW0_BS_1U , ROW1_FIXED , ROW1_ANSI , ROW2_FIXED , ROW2_ANSI , ROW3_ANSI , ROW3_FIXED , ROW3_RS_ARROW
 
 / {
 

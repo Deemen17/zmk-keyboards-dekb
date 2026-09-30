@@ -1,5 +1,5 @@
 file_format: "1"
-id: de60_ble_rev1
+id: de60_ble_rev1_adc
 name: DE60 BLE Rev1
 type: board
 arch: arm

@@ -1,0 +1,15 @@
+manifest:
+  defaults:
+    revision: v0.3
+  remotes:
+    - name: zmkfirmware
+      url-base: https://github.com/zmkfirmware/
+    - name: phdesign
+      url-base: https://github.com/ph-design/
+  projects:
+    - name: zmk
+      remote: phdesign
+      revision: v0.3-lts
+      import: app/west.yml
+  self:
+    path: config

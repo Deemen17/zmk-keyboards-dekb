@@ -1,6 +1,0 @@
-# Copyright (c) 2026 DEKB
-# SPDX-License-Identifier: MIT
-
-config BOARD_DE60_BLE_REV1_REL
-    bool "de60_ble_rev1_rel"
-    depends on SOC_NRF52840_QIAA

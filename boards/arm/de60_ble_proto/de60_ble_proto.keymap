@@ -1,6 +1,6 @@
 #include "../common.keymap"
 
-#include "haiky.keymap"
+// #include "haiky.keymap"
 // #define RGB_KEYCODE
 
 / {
