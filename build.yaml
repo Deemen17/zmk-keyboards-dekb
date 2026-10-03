@@ -4,3 +4,7 @@ include:
   - board: de60_ble_rev1_adc
     snippet: studio-rpc-usb-uart
     artifact-name: dekb_de60_ble_rev1_adc_sep_2026
+
+  - board: de60_ble_rev1_fuelgauge
+    snippet: studio-rpc-usb-uart
+    artifact-name: dekb_de60_ble_rev1_fuelgauge_sep_2026
